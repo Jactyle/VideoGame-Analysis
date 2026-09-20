@@ -1,0 +1,19 @@
+{
+  "rows_kept": 117420,
+  "rows_dropped": {
+    "no_name": 1,
+    "playtest": 8139,
+    "no_genre": 295
+  },
+  "total_rows_dropped": 8435,
+  "distinct_release_years": 30,
+  "release_year_range": [
+    1997,
+    2026
+  ],
+  "distinct_publishers": 63358,
+  "fallback_publisher_from_developer": 469,
+  "fallback_publisher_unknown": 77,
+  "source": "https://huggingface.co/datasets/FronkonGames/steam-games-dataset",
+  "generated_at": "2026-09-20T21:00:49Z"
+}
