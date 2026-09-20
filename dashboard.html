@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Steam Games Analysis</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="site-nav">
+    <span class="brand">Steam Games Analysis</span>
+    <a href="index.html">Report</a>
+    <a href="dashboard.html" class="active">Dashboard</a>
+  </nav>
+
+  <main>
+    <div class="page-header">
+      <h1>Explore the data</h1>
+      <p class="summary-paragraph">
+        Filter 117,420 Steam games by release year, genre, platform, publisher, and price,
+        then switch what each chart measures and how it's broken down. Everything below —
+        the summary numbers, the charts, and the table — recalculates in your browser as you change the filters.
+      </p>
+    </div>
+
+    <form id="filters" class="filter-bar">
+      <div class="filter-field">
+        <label for="filter-year-from">Release year from</label>
+        <select id="filter-year-from"></select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-year-to">Release year to</label>
+        <select id="filter-year-to"></select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-genre">Genre</label>
+        <select id="filter-genre">
+          <option value="">All genres</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-platform">Platform</label>
+        <select id="filter-platform">
+          <option value="">All platforms</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-free">Price</label>
+        <select id="filter-free">
+          <option value="">Free and paid</option>
+          <option value="free">Free only</option>
+          <option value="paid">Paid only</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="filter-publisher">Publisher contains</label>
+        <input id="filter-publisher" type="text" placeholder="e.g. Valve" />
+      </div>
+      <button type="button" id="reset-filters">Reset filters</button>
+    </form>
+
+    <div class="stat-grid" id="summary-stats">
+      <div class="stat-tile">
+        <span class="value" id="stat-count">—</span>
+        <span class="label">Games matching filters</span>
+      </div>
+      <div class="stat-tile">
+        <span class="value" id="stat-owners">—</span>
+        <span class="label">Total estimated owners</span>
+      </div>
+      <div class="stat-tile">
+        <span class="value" id="stat-price">—</span>
+        <span class="label">Average price</span>
+      </div>
+      <div class="stat-tile">
+        <span class="value" id="stat-rate">—</span>
+        <span class="label">Review-positive rate</span>
+      </div>
+    </div>
+
+    <h2 class="section-title">Charts</h2>
+    <p class="hint">Each chart has its own measure and breakdown switch — mix and match.</p>
+    <div class="chart-grid" id="chart-grid"></div>
+
+    <h2 class="section-title">Numbers behind the view</h2>
+    <div class="chart-controls">
+      <label for="table-breakdown" style="align-self:center; color:var(--text-muted); font-size:0.85rem;">Break table down by</label>
+      <select id="table-breakdown"></select>
+    </div>
+    <div class="table-wrap">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th data-sort="key">Group</th>
+            <th data-sort="count">Count</th>
+            <th data-sort="totalOwners">Total owners</th>
+            <th data-sort="avgPrice">Avg price</th>
+            <th data-sort="medianPlaytime">Median playtime (min)</th>
+            <th data-sort="reviewRate">Review rate</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    Data: Steam Games Dataset (Fronkon Games, MIT license) via Hugging Face. See the report's closing section for details.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
