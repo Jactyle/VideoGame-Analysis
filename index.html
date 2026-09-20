@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steam Games Analysis — Report</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="site-nav">
+    <span class="brand">Steam Games Analysis</span>
+    <a href="index.html" class="active">Report</a>
+    <a href="dashboard.html">Dashboard</a>
+  </nav>
+
+  <main>
+    <div class="page-header">
+      <h1>Twenty-eight years of games on Steam</h1>
+      <p class="byline">By Jack Welborn</p>
+      <p class="summary-paragraph">
+        This report analyzes <span class="stat" id="p-total-games">—</span> games published on Steam between
+        <span class="stat" id="p-year-range">—</span>, drawn from the Steam store's own catalog data. It looks at
+        how fast the catalog has grown, which genres and publishers dominate it, how players rate and play what
+        they buy, and how ownership of the platform's audience is distributed. The short version: growth has been
+        explosive, a small number of genres and blockbuster titles account for a disproportionate share of
+        everything measurable, and cross-platform support has quietly declined even as the catalog exploded.
+      </p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-tile">
+        <span class="value" id="stat-total-games">—</span>
+        <span class="label">Games analyzed</span>
+      </div>
+      <div class="stat-tile">
+        <span class="value" id="stat-year-span">—</span>
+        <span class="label">Years covered</span>
+      </div>
+      <div class="stat-tile">
+        <span class="value" id="stat-publishers">—</span>
+        <span class="label">Distinct publishers</span>
+      </div>
+      <div class="stat-tile">
+        <span class="value" id="stat-review-rate">—</span>
+        <span class="label">Catalog-wide review-positive rate</span>
+      </div>
+    </div>
+
+    <section class="finding" id="finding-1">
+      <h2>The catalog has grown roughly ninefold since 2015</h2>
+      <p>
+        Steam published about <span class="stat" id="f1-2015">—</span> games in 2015. By 2025 that had grown to
+        <span class="stat" id="f1-2025">—</span> — a release rate that keeps climbing every year, with no sign of
+        slowing. Most of Steam's entire catalog, in other words, is recent: more games were released in 2024 and
+        2025 combined than in the platform's first fifteen years put together.
+      </p>
+      <div class="chart-card"><canvas id="chart-1" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-2">
+      <h2>Three genres make up more than three-quarters of the catalog</h2>
+      <p>
+        Of 27 distinct genres in the data, Action, Adventure, and Casual alone account for
+        <span class="stat" id="f2-share">—</span> of every game published. Action is the single largest genre at
+        <span class="stat" id="f2-action">—</span> games, roughly double the next largest.
+      </p>
+      <div class="chart-card"><canvas id="chart-2" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-3">
+      <h2>Free-to-play grew for a decade, then plateaued</h2>
+      <p>
+        The free-to-play share of new releases rose from about <span class="stat" id="f3-2010">—</span> in 2010 to
+        a peak of roughly <span class="stat" id="f3-peak">—</span> around 2022, then eased back down to
+        <span class="stat" id="f3-2025">—</span> in 2025. Across the whole catalog, <span class="stat" id="f3-overall">—</span>
+        of games are free.
+      </p>
+      <div class="chart-card"><canvas id="chart-3" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-4">
+      <h2>Review positivity is high everywhere, but genres still separate</h2>
+      <p>
+        Weighted across every review on the platform, <span class="stat" id="f4-overall">—</span> of reviews are
+        positive. Among the ten largest genres, Indie and Casual games rate highest; Simulation games rate lowest,
+        at roughly ten points below the Indie/Casual rate.
+      </p>
+      <div class="chart-card"><canvas id="chart-4" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-5">
+      <h2>RPGs hold players far longer than any other major genre</h2>
+      <p>
+        Among games that report any playtime at all, the median RPG holds a player for about
+        <span class="stat" id="f5-rpg">—</span> minutes — more than double the median for Action or Casual games,
+        and nearly five times the median for Free To Play titles.
+      </p>
+      <div class="chart-card"><canvas id="chart-5" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-6">
+      <h2>Mac and Linux support has fallen as the catalog has grown</h2>
+      <p>
+        Mac support peaked around 2014, when roughly <span class="stat" id="f6-mac-peak">—</span> of that year's
+        releases supported it; by 2025 that had fallen to about <span class="stat" id="f6-mac-2025">—</span>. Linux
+        support followed the same arc, from a similar peak down to roughly <span class="stat" id="f6-linux-2025">—</span>
+        in 2025 — even as the total number of games shipped each year kept climbing.
+      </p>
+      <div class="chart-card"><canvas id="chart-6" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-7">
+      <h2>The publishers who ship the most games aren't the ones who own the players</h2>
+      <p>
+        63,000-plus publishers have released a game on Steam, but ownership of the audience is concentrated at the
+        very top: the ten largest publishers by estimated owners — Valve, Electronic Arts, Ubisoft, Activision,
+        KRAFTON, 2K, Bethesda, SEGA, Rockstar, and Capcom — account for roughly
+        <span class="stat" id="f7-share">—</span> of estimated owners across the <em>entire</em> 117,000-game
+        catalog. None of them are among the most prolific publishers by game count; the publishers who release the
+        most titles are small studios pushing out large volumes of budget games.
+      </p>
+      <div class="chart-card"><canvas id="chart-7" height="260"></canvas></div>
+    </section>
+
+    <section class="finding" id="finding-8">
+      <h2>Ownership follows an extreme long tail</h2>
+      <p>
+        The top 1% of games by estimated owners — about 1,170 titles — account for roughly
+        <span class="stat" id="f8-top1">—</span> of all estimated ownership across the catalog. The top 10% account
+        for about <span class="stat" id="f8-top10">—</span>. The remaining 90% of games, tens of thousands of
+        titles, split the last eighth of the audience between them.
+      </p>
+      <div class="chart-card"><canvas id="chart-8" height="260"></canvas></div>
+    </section>
+
+    <section class="finding closing" id="closing">
+      <h2>About this data</h2>
+      <p>
+        The data comes from the <a href="https://huggingface.co/datasets/FronkonGames/steam-games-dataset" target="_blank" rel="noopener">Steam Games Dataset</a>
+        maintained by Fronkon Games (MIT license), which is built directly from the official Steam store API and
+        SteamSpy. One row is one published game on Steam: its release date, its developer and publisher, its genre
+        and store category, which platforms it runs on, its price, its review counts, and Steam's own estimate of
+        how many people own it. DLC, soundtracks, videos, and other non-game listings are already excluded by the
+        source dataset.
+      </p>
+      <p>
+        From the source file's <span id="closing-raw-count">—</span> usable rows, this analysis drops
+        <span id="closing-dropped-total">—</span> rows: <span id="closing-dropped-playtest">—</span> pre-release
+        "playtest" builds (not released games), <span id="closing-dropped-genre">—</span> games with no genre
+        listed at all (genre is used throughout this site as a filter and category), and one row with no game name.
+        That leaves <span id="closing-kept">—</span> games. The raw source file also had a header bug — a missing
+        comma merged its "Discount" and "DLC count" columns into one — which the cleaning script corrects before
+        anything else.
+      </p>
+      <p>Every derived number on this site is computed the same way:</p>
+      <ul>
+        <li><strong>Release year</strong> is parsed from Steam's release-date string. Some games only list a month or a bare year; those are treated as January 1st of that year, so a handful of "years" are slightly imprecise about the month.</li>
+        <li><strong>Review-positive rate</strong> for a single game is positive ÷ (positive + negative) reviews. For a group of games (a genre, a year, a platform) it is the <em>sum</em> of positive reviews across the group divided by the <em>sum</em> of all reviews in the group — a weighted rate, not an average of each game's own rate, so one blockbuster with millions of reviews properly outweighs thousands of unreviewed games.</li>
+        <li><strong>Estimated owners</strong> is the midpoint of the owner range Steam/SteamSpy publish for each game (for example, "0 – 20,000" becomes 10,000). It is a rough estimate derived from public signals, not a verified sales figure, and is only meaningful in aggregate or in relative comparisons.</li>
+        <li><strong>Median playtime</strong> for a group only includes games that report nonzero average playtime; games reporting zero are treated as missing data, not as "never played," since Steam doesn't distinguish the two.</li>
+        <li><strong>Publisher</strong> is the first publisher listed for a game. When a game lists no publisher, its developer is used instead (469 games); when it lists neither, it's labeled "Unknown" (77 games).</li>
+      </ul>
+      <p>
+        Want to slice the data yourself instead of reading someone else's summary of it? Head to the
+        <a href="dashboard.html">dashboard</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Data: Steam Games Dataset (Fronkon Games, MIT license) via Hugging Face.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/report.js"></script>
+</body>
+</html>
