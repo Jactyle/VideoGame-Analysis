@@ -71,9 +71,15 @@
       [{ label: "% free to play", data: freeSeries }]
     );
     const y2010 = yearly.find((y) => y.year === 2010);
-    let peakYear = yearly.reduce((best, y) => ((100 * y.free) / y.total > (100 * best.free) / best.total ? y : best));
+    // Restrict the "peak" search to years with a meaningful sample size —
+    // early years with only 1-2 releases can show a spurious 50-100% free
+    // rate that isn't representative of anything.
+    const MIN_SAMPLE = 100;
+    const peakCandidates = yearly.filter((y) => y.total >= MIN_SAMPLE);
+    const peakYear = peakCandidates.reduce((best, y) => ((100 * y.free) / y.total > (100 * best.free) / best.total ? y : best));
     setText("f3-2010", pct(y2010 ? (100 * y2010.free) / y2010.total : 0));
     setText("f3-peak", pct((100 * peakYear.free) / peakYear.total));
+    setText("f3-peak-year", String(peakYear.year));
     setText("f3-2025", pct(y2025 ? (100 * y2025.free) / y2025.total : 0));
     setText("f3-overall", pct((100 * games.filter((r) => r.isFree).length) / s.count));
 
