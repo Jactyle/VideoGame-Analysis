@@ -201,7 +201,10 @@
         // tile the disc evenly — no random clumps or gaps — and the merge
         // actually resolves into a clean circle rather than a lumpy blob.
         const frac = (i + 0.5) / count;
-        const rr = convergePupilR * 0.86 * Math.sqrt(frac);
+        // Spread radius + each particle's own final radius (below) must sum
+        // to 1.0, or the outer particles' visible edges land past the true
+        // pupil boundary and the rushed circle reads bigger than the logo's.
+        const rr = convergePupilR * 0.58 * Math.sqrt(frac);
         const angle = i * GOLDEN_ANGLE;
         p.sx = p.x;
         p.sy = p.y;
@@ -228,13 +231,13 @@
         0,
         convergeTargetX,
         convergeTargetY,
-        convergePupilR * 2.2
+        convergePupilR * 1.4
       );
       glow.addColorStop(0, `rgba(${pupilStr}, 0.5)`);
       glow.addColorStop(1, `rgba(${pupilStr}, 0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(convergeTargetX, convergeTargetY, convergePupilR * 2.2, 0, Math.PI * 2);
+      ctx.arc(convergeTargetX, convergeTargetY, convergePupilR * 1.4, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = `rgb(${pupilStr})`;
@@ -350,11 +353,13 @@
         const cb = p.base[2] + (PUPIL_RGB[2] - p.base[2]) * ct;
         const color = `${cr}, ${cg}, ${cb}`;
 
-        // Particles swell toward roughly half the pupil's radius as they
-        // converge, so hundreds of overlapping circles visibly melt
-        // together into one solid disc — not a hidden last-frame swap.
-        const drawR = p.r + (convergePupilR * 0.5 - p.r) * ct;
-        const glowMult = 5 - 3.3 * ct;
+        // Particles swell as they converge so hundreds of overlapping
+        // circles visibly melt together into one solid disc — not a hidden
+        // last-frame swap. Capped at 0.42R (paired with the 0.58R spread
+        // above) so the outermost particle's edge lands exactly on the
+        // pupil's true radius instead of overshooting it.
+        const drawR = p.r + (convergePupilR * 0.42 - p.r) * ct;
+        const glowMult = 5 - 4.3 * ct;
         const glowAlpha = 0.95 - 0.35 * ct;
 
         const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, drawR * glowMult);
