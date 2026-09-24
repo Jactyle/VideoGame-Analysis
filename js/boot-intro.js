@@ -78,7 +78,9 @@
       `stroke-dasharray="${BADGE_CIRC}" stroke-dashoffset="${BADGE_CIRC}" />` +
       "</svg>" +
       "</div>" +
-      '<div class="boot-wordmark" aria-hidden="true">Steam Games Analysis</div>';
+      '<div class="boot-wordmark" aria-hidden="true">Steam Games Analysis</div>' +
+      '<audio id="boot-audio" src="audio/boot-intro.mp3" preload="auto"></audio>' +
+      '<audio id="boot-idle-audio" src="audio/idle-loop.mp3" preload="auto" loop></audio>';
     document.body.appendChild(overlay);
     return overlay;
   }
@@ -110,6 +112,17 @@
     const canvas = overlay.querySelector("#boot-canvas");
     const ctx = canvas.getContext("2d");
     const logoWrap = overlay.querySelector(".boot-logo-wrap");
+    const audio = overlay.querySelector("#boot-audio");
+    audio.volume = 0.75;
+    const idleAudio = overlay.querySelector("#boot-idle-audio");
+    idleAudio.volume = 0.4;
+
+    // Autoplay-with-sound needs a user gesture in most browsers. Try right
+    // away (works in some), then retry on this page's first genuine
+    // gesture if the click into the intro hasn't already happened.
+    function tryStartIdle() {
+      if (phase === "idle" && idleAudio.paused) idleAudio.play().catch(() => {});
+    }
 
     const styles = getComputedStyle(document.documentElement);
     const blueRgb = parseRgb(styles.getPropertyValue("--series-1-rgb") || "102, 192, 244");
@@ -172,7 +185,10 @@
     let convergeTargetX = 0;
     let convergeTargetY = 0;
     let convergePupilR = 0;
-    const CONVERGE_MS = 1400;
+    // Timed to audio/boot-intro.mp3: its loudest hit lands at ~2.4s, so the
+    // rush (plus each particle's up-to-380ms arrival stagger) and the brief
+    // hold are sized to land beginExplode() right on that beat.
+    const CONVERGE_MS = 1870;
     const SOLID_HOLD_MS = 150; // brief beat on the fully-formed circle before it bursts apart
     const EXPLODE_MS = 900; // particles drift apart and dissolve, fading out as they go
     const BLACK_HOLD_MS = 150; // brief black beat before the logo starts building
@@ -182,6 +198,11 @@
       if (phase !== "idle") return;
       phase = "converging";
       convergeStart = performance.now();
+      idleAudio.pause();
+      try {
+        audio.currentTime = 0;
+      } catch (e) {}
+      audio.play().catch(() => {});
 
       // Every particle rushes to the logo box's true geometric center —
       // the same point the badge ring is centered on — rather than the
@@ -302,6 +323,10 @@
     }
 
     function finalTeardown() {
+      audio.pause();
+      idleAudio.pause();
+      document.removeEventListener("pointerdown", tryStartIdle);
+      document.removeEventListener("keydown", tryStartIdle);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("touchmove", onMove);
@@ -319,6 +344,10 @@
     function onKey(e) {
       if (e.key === "Escape") skipIntro();
     }
+
+    tryStartIdle();
+    document.addEventListener("pointerdown", tryStartIdle, { once: true });
+    document.addEventListener("keydown", tryStartIdle, { once: true });
 
     window.addEventListener("resize", resize);
     window.addEventListener("mousemove", onMove);
