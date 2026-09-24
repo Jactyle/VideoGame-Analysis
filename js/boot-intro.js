@@ -41,11 +41,6 @@
   const VB_MINY = -1.15;
   const VB_SIZE = 67;
   const VIEWBOX = `${VB_MINX} ${VB_MINY} ${VB_SIZE} ${VB_SIZE}`;
-  // Where the pupil sits as a fraction of the logo box, so the particle
-  // rush can converge on its exact on-screen spot rather than the box's
-  // geometric center (the pupil sits up-and-right of that center).
-  const EYE_FRAC_X = (EYE_CX - VB_MINX) / VB_SIZE;
-  const EYE_FRAC_Y = (EYE_CY - VB_MINY) / VB_SIZE;
 
   function parseRgb(str) {
     const parts = str.trim().split(",").map(Number);
@@ -74,7 +69,6 @@
       '<div class="boot-logo-wrap" aria-hidden="true">' +
       `<svg viewBox="${VIEWBOX}" xmlns="http://www.w3.org/2000/svg">` +
       '<g class="lg-build">' +
-      `<circle class="lg-pupil" cx="${EYE_CX}" cy="${EYE_CY}" r="6.09" />` +
       `<circle class="lg-eye-ring" cx="${EYE_CX}" cy="${EYE_CY}" r="${EYE_MID_R}" ` +
       `stroke-width="${EYE_RING_W}" stroke-dasharray="${EYE_CIRC}" stroke-dashoffset="${EYE_CIRC * 0.28}" />` +
       `<path class="lg-arm" d="${GROUP_A_D}" />` +
@@ -122,7 +116,7 @@
     const styles = getComputedStyle(document.documentElement);
     const blueRgb = parseRgb(styles.getPropertyValue("--series-1-rgb") || "102, 192, 244");
     const violetRgb = parseRgb(styles.getPropertyValue("--decor-4-rgb") || "155, 107, 255");
-    const PUPIL_RGB = [26, 159, 255]; // matches --accent-strong / .lg-pupil fill (#1a9fff)
+    const MERGE_RGB = [255, 255, 255]; // white, matching the logo's ring/arm/glyph
 
     let W = 0;
     let H = 0;
@@ -153,6 +147,7 @@
         r: Math.random() * 1.3 + 0.6,
         base: Math.random() < 0.82 ? blueRgb : violetRgb,
         convergeT: 0,
+        fade: 1,
         sx: 0,
         sy: 0,
         tx: 0,
@@ -172,14 +167,17 @@
       mouse.active = true;
     }
 
-    let phase = "idle"; // idle -> converging -> logo
+    let phase = "idle"; // idle -> converging -> solid -> exploding -> black -> logo
     let finishing = false;
     let convergeStart = 0;
+    let explodeStart = 0;
     let convergeTargetX = 0;
     let convergeTargetY = 0;
     let convergePupilR = 0;
     const CONVERGE_MS = 1400;
-    const SOLID_HOLD_MS = 150; // brief beat on the fully-formed circle before the boot sequence starts
+    const SOLID_HOLD_MS = 150; // brief beat on the fully-formed circle before it bursts apart
+    const EXPLODE_MS = 900; // particles drift apart and dissolve, fading out as they go
+    const BLACK_HOLD_MS = 150; // brief black beat before the logo starts building
     const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
     function beginConverge() {
@@ -187,13 +185,16 @@
       phase = "converging";
       convergeStart = performance.now();
 
-      // Every particle rushes to the exact spot the pupil will appear at
-      // (not the logo box's geometric center — the pupil sits up-and-right
-      // of that), so the burst hands off to the SVG with no visible jump.
+      // Every particle rushes to the logo box's true geometric center —
+      // the same point the badge ring is centered on — rather than the
+      // eye's off-center spot. The particles now explode apart and the
+      // screen goes black before the logo builds, so nothing needs to
+      // hand off to the eye ring's exact position anymore; centering the
+      // merge here just reads as more deliberate.
       const wrapCenterX = W / 2;
       const wrapCenterY = H / 2 - 10;
-      convergeTargetX = wrapCenterX + (EYE_FRAC_X - 0.5) * logoSize;
-      convergeTargetY = wrapCenterY + (EYE_FRAC_Y - 0.5) * logoSize;
+      convergeTargetX = wrapCenterX;
+      convergeTargetY = wrapCenterY;
       convergePupilR = 6.09 * (logoSize / VB_SIZE);
       const count = particles.length;
       particles.forEach((p, i) => {
@@ -220,11 +221,11 @@
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
-    function drawSolidPupil() {
-      // A perfectly round, crisp disc in the pupil's exact color/position/
-      // radius — painted last, on top of the particles, so whatever
-      // texture or gaps they happen to leave is fully hidden.
-      const pupilStr = PUPIL_RGB.join(", ");
+    function drawMergedCircle() {
+      // A perfectly round, crisp white disc in the merge point's exact
+      // position/radius — painted last, on top of the particles, so
+      // whatever texture or gaps they happen to leave is fully hidden.
+      const mergeStr = MERGE_RGB.join(", ");
       const glow = ctx.createRadialGradient(
         convergeTargetX,
         convergeTargetY,
@@ -233,14 +234,14 @@
         convergeTargetY,
         convergePupilR * 1.4
       );
-      glow.addColorStop(0, `rgba(${pupilStr}, 0.5)`);
-      glow.addColorStop(1, `rgba(${pupilStr}, 0)`);
+      glow.addColorStop(0, `rgba(${mergeStr}, 0.5)`);
+      glow.addColorStop(1, `rgba(${mergeStr}, 0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.arc(convergeTargetX, convergeTargetY, convergePupilR * 1.4, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = `rgb(${pupilStr})`;
+      ctx.fillStyle = `rgb(${mergeStr})`;
       ctx.beginPath();
       ctx.arc(convergeTargetX, convergeTargetY, convergePupilR, 0, Math.PI * 2);
       ctx.fill();
@@ -248,10 +249,42 @@
 
     function onParticlesArrived() {
       phase = "solid";
-      // Hold on the fully-formed circle for a beat before the boot
-      // sequence begins, so it reads as a deliberate "it's formed" moment
-      // rather than an instant hand-off.
-      window.setTimeout(revealLogo, SOLID_HOLD_MS);
+      // Hold on the fully-formed circle for a beat before it bursts apart,
+      // so it reads as a deliberate "it's formed" moment rather than an
+      // instant hand-off.
+      window.setTimeout(beginExplode, SOLID_HOLD_MS);
+    }
+
+    function beginExplode() {
+      if (finishing) return;
+      phase = "exploding";
+      explodeStart = performance.now();
+      // From the (roughly centered) merge point, half the screen diagonal
+      // reaches the farthest corner — this comfortably clears every edge,
+      // in every direction, while still landing well short of the old
+      // full-diagonal-plus rocket distance.
+      const blastDist = Math.hypot(W, H) * 0.62;
+      particles.forEach((p, i) => {
+        // Same angle each particle arrived at, for a clean radial burst
+        // instead of a random-looking scatter.
+        const angle = i * GOLDEN_ANGLE;
+        const dist = blastDist * (1 + Math.random() * 0.35);
+        p.sx = p.x;
+        p.sy = p.y;
+        p.tx = convergeTargetX + Math.cos(angle) * dist;
+        p.ty = convergeTargetY + Math.sin(angle) * dist;
+        p.delay = Math.random() * 150;
+      });
+      // The rAF loop stopped during the "solid" hold — restart it.
+      requestAnimationFrame(frame);
+    }
+
+    function onExplodeDone() {
+      phase = "black";
+      // Paint a clean black frame so no residual glow lingers under the logo.
+      ctx.fillStyle = "#06090d";
+      ctx.fillRect(0, 0, W, H);
+      window.setTimeout(revealLogo, BLACK_HOLD_MS);
     }
 
     function revealLogo() {
@@ -344,13 +377,31 @@
           p.convergeT = Math.min(1, e * 1.4);
         });
         if (allDone) onParticlesArrived();
+      } else if (phase === "exploding") {
+        let allDone = true;
+        particles.forEach((p) => {
+          const elapsed = now - explodeStart - p.delay;
+          if (elapsed < 0) {
+            allDone = false;
+            return;
+          }
+          const t = Math.min(1, elapsed / EXPLODE_MS);
+          if (t < 1) allDone = false;
+          const e = easeInOutCubic(t);
+          p.x = p.sx + (p.tx - p.sx) * e;
+          p.y = p.sy + (p.ty - p.sy) * e;
+          // Fade out gently over the whole drift so it dissolves into
+          // black rather than popping off abruptly.
+          p.fade = Math.max(0, 1 - t);
+        });
+        if (allDone) onExplodeDone();
       }
 
       particles.forEach((p) => {
         const ct = p.convergeT;
-        const cr = p.base[0] + (PUPIL_RGB[0] - p.base[0]) * ct;
-        const cg = p.base[1] + (PUPIL_RGB[1] - p.base[1]) * ct;
-        const cb = p.base[2] + (PUPIL_RGB[2] - p.base[2]) * ct;
+        const cr = p.base[0] + (MERGE_RGB[0] - p.base[0]) * ct;
+        const cg = p.base[1] + (MERGE_RGB[1] - p.base[1]) * ct;
+        const cb = p.base[2] + (MERGE_RGB[2] - p.base[2]) * ct;
         const color = `${cr}, ${cg}, ${cb}`;
 
         // Particles swell as they converge so hundreds of overlapping
@@ -360,7 +411,7 @@
         // pupil's true radius instead of overshooting it.
         const drawR = p.r + (convergePupilR * 0.42 - p.r) * ct;
         const glowMult = 5 - 4.3 * ct;
-        const glowAlpha = 0.95 - 0.35 * ct;
+        const glowAlpha = (0.95 - 0.35 * ct) * p.fade;
 
         const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, drawR * glowMult);
         glow.addColorStop(0, `rgba(${color}, ${glowAlpha})`);
@@ -370,7 +421,7 @@
         ctx.arc(p.x, p.y, drawR * glowMult, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = `rgb(${color})`;
+        ctx.fillStyle = `rgba(${color}, ${p.fade})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, drawR, 0, Math.PI * 2);
         ctx.fill();
@@ -378,9 +429,11 @@
 
       // On the exact frame the particles finish arriving, paint the
       // perfect circle on top as the final word on their shape.
-      if (phase === "solid") drawSolidPupil();
+      if (phase === "solid") drawMergedCircle();
 
-      if (!finishing && (phase === "idle" || phase === "converging")) requestAnimationFrame(frame);
+      if (!finishing && (phase === "idle" || phase === "converging" || phase === "exploding")) {
+        requestAnimationFrame(frame);
+      }
     }
     requestAnimationFrame(frame);
   }

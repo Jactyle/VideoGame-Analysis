@@ -789,10 +789,6 @@ html.boot-lock body {
   overflow: visible;
 }
 
-.lg-pupil {
-  fill: var(--accent-strong, #1a9fff);
-}
-
 .lg-eye-ring {
   fill: none;
   stroke: #ffffff;
