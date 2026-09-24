@@ -255,7 +255,7 @@ main > .page-header:first-child {
   letter-spacing: -0.01em;
   margin: 0 0 14px;
   padding-bottom: 0.1em;
-  max-width: 19ch;
+  max-width: none;
   color: #ffffff;
   background: linear-gradient(180deg, #ffffff 0%, #cfe9fb 100%);
   -webkit-background-clip: text;
@@ -273,7 +273,9 @@ main > .page-header:first-child {
 .summary-paragraph {
   font-size: 1.05rem;
   color: var(--text-secondary);
-  max-width: 68ch;
+  max-width: 82ch;
+  text-align: justify;
+  hyphens: none;
 }
 
 .stat {
@@ -480,6 +482,10 @@ main > .page-header:first-child {
 .closing li {
   color: var(--text-secondary);
   max-width: 74ch;
+}
+
+.finding p.closing-cta {
+  max-width: none;
 }
 
 /* Dashboard */
@@ -700,25 +706,83 @@ footer.site-footer::before {
   opacity: 0.7;
 }
 
-/* Replay-intro button, docked to the right side of the nav */
-.boot-replay {
+/* Nav overflow popup (replay-intro lives inside it), docked to the right
+   side of the nav. The menu is right-anchored to the trigger and animates
+   in from that fixed right edge, so it visibly "opens to the left" instead
+   of risking overflow past the viewport's right edge. */
+.nav-popup {
+  position: relative;
   margin-left: auto;
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+}
+
+.nav-popup-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   color: var(--text-muted);
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 7px 12px;
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.boot-replay:hover {
+.nav-popup-trigger svg {
+  fill: currentColor;
+}
+
+.nav-popup-trigger:hover,
+.nav-popup.open .nav-popup-trigger {
   color: #ffffff;
   border-color: var(--accent);
+}
+
+.nav-popup-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.55);
+  padding: 6px;
+  opacity: 0;
+  transform: translateX(60px);
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 0.7, 0.3, 1);
+  z-index: 20;
+}
+
+.nav-popup.open .nav-popup-menu {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.nav-popup-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.nav-popup-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Boot intro — mimics the Steam Deck startup animation: particles converge
@@ -867,24 +931,3 @@ html.boot-lock body {
   transform: translateY(-50%);
 }
 
-.boot-skip {
-  position: absolute;
-  right: 22px;
-  bottom: 22px;
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: opacity 0.3s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.boot-skip:hover {
-  color: #ffffff;
-  border-color: var(--accent);
-}

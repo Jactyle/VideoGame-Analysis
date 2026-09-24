@@ -78,8 +78,7 @@
       `stroke-dasharray="${BADGE_CIRC}" stroke-dashoffset="${BADGE_CIRC}" />` +
       "</svg>" +
       "</div>" +
-      '<div class="boot-wordmark" aria-hidden="true">Steam Games Analysis</div>' +
-      '<button type="button" class="boot-skip">Skip intro</button>';
+      '<div class="boot-wordmark" aria-hidden="true">Steam Games Analysis</div>';
     document.body.appendChild(overlay);
     return overlay;
   }
@@ -110,7 +109,6 @@
     const overlay = buildOverlay();
     const canvas = overlay.querySelector("#boot-canvas");
     const ctx = canvas.getContext("2d");
-    const skipBtn = overlay.querySelector(".boot-skip");
     const logoWrap = overlay.querySelector(".boot-logo-wrap");
 
     const styles = getComputedStyle(document.documentElement);
@@ -328,10 +326,6 @@
     window.addEventListener("keydown", onKey);
     overlay.addEventListener("click", beginConverge);
     overlay.addEventListener("touchstart", beginConverge, { passive: true });
-    skipBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      skipIntro();
-    });
 
     function frame(now) {
       // Trailing fade (instead of a hard clear) gives particles a light-streak trail.
@@ -459,8 +453,34 @@
 
   window.VGBootIntro = { run: runIntro, replay: replayIntro };
 
+  const navPopup = document.querySelector(".nav-popup");
+  const popupTrigger = document.getElementById("nav-popup-trigger");
+  function closeNavPopup() {
+    if (!navPopup) return;
+    navPopup.classList.remove("open");
+    if (popupTrigger) popupTrigger.setAttribute("aria-expanded", "false");
+  }
+  if (navPopup && popupTrigger) {
+    popupTrigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = navPopup.classList.toggle("open");
+      popupTrigger.setAttribute("aria-expanded", String(isOpen));
+    });
+    document.addEventListener("click", (e) => {
+      if (!navPopup.contains(e.target)) closeNavPopup();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeNavPopup();
+    });
+  }
+
   const replayBtn = document.getElementById("replay-intro");
-  if (replayBtn) replayBtn.addEventListener("click", replayIntro);
+  if (replayBtn) {
+    replayBtn.addEventListener("click", () => {
+      closeNavPopup();
+      replayIntro();
+    });
+  }
 
   if (!alreadyPlayed()) {
     if (document.readyState === "loading") {
