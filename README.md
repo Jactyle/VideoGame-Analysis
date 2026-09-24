@@ -2,7 +2,8 @@
 
 A two-page site analyzing 117,420 games published on Steam between 1997 and 2026: a
 static report of eight findings, and an interactive dashboard for exploring the data
-yourself. Live site: https://jactyle.github.io/VideoGame-Analysis/
+yourself. 
+Live site: https://jactyle.github.io/VideoGame-Analysis/
 
 ## Where the data came from
 
