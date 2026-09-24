@@ -796,10 +796,12 @@ html.boot-lock body {
 .lg-eye-ring {
   fill: none;
   stroke: #ffffff;
-  transition: stroke-dashoffset 0.75s cubic-bezier(0.22, 0.7, 0.3, 1) 0.25s;
+  opacity: 0;
+  transition: opacity 0.3s ease 0.3s, stroke-dashoffset 0.75s cubic-bezier(0.22, 0.7, 0.3, 1) 0.35s;
 }
 
 #boot-intro.boot-logo-active .lg-eye-ring {
+  opacity: 1;
   stroke-dashoffset: 0;
 }
 

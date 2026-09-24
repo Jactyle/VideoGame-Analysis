@@ -179,7 +179,7 @@
     let convergeTargetY = 0;
     let convergePupilR = 0;
     const CONVERGE_MS = 1400;
-    const SOLID_HOLD_MS = 600; // pause on the fully-formed circle before the boot sequence starts
+    const SOLID_HOLD_MS = 150; // brief beat on the fully-formed circle before the boot sequence starts
     const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
     function beginConverge() {
