@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — Steam Games Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -15,12 +18,15 @@
 
   <main>
     <div class="page-header">
-      <h1>Explore the data</h1>
-      <p class="summary-paragraph">
-        Filter 117,420 Steam games by release year, genre, platform, publisher, and price,
-        then switch what each chart measures and how it's broken down. Everything below —
-        the summary numbers, the charts, and the table — recalculates in your browser as you change the filters.
-      </p>
+      <div class="page-header-inner">
+        <p class="kicker">Live Data Explorer</p>
+        <h1>Explore the data</h1>
+        <p class="summary-paragraph">
+          Filter 117,420 Steam games by release year, genre, platform, publisher, and price,
+          then switch what each chart measures and how it's broken down. Everything below —
+          the summary numbers, the charts, and the table — recalculates in your browser as you change the filters.
+        </p>
+      </div>
     </div>
 
     <form id="filters" class="filter-bar">
@@ -112,6 +118,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/motion.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

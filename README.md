@@ -29,6 +29,7 @@ explains all of this in prose, with the exact drop counts pulled live from
 | `css/style.css` | Shared nav bar, typography, color palette (including automatic dark mode), stat tiles, filter bar, chart cards, and table styling used by both pages. |
 | `js/data.js` | Loads and parses `data/games.csv` (via PapaParse) and provides the shared aggregation helpers (`aggregateBy`, `topNWithOther`, `summarize`, etc.) that both pages build their numbers and charts from. |
 | `js/charts.js` | Thin wrapper around Chart.js so every chart on the site shares the same bar/line styling and color scheme. |
+| `js/motion.js` | Small progressive-enhancement scroll-reveal effect (findings, stat tiles, chart cards fade in as you scroll); does nothing if JS fails or the visitor prefers reduced motion. |
 | `js/report.js` | Computes the report page's eight findings and headline numbers and renders their charts. |
 | `js/dashboard.js` | Wires up the dashboard's filters, summary tiles, four chart panels, sortable table, and reset button. |
 

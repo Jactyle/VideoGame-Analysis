@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steam Games Analysis — Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -15,16 +18,19 @@
 
   <main>
     <div class="page-header">
-      <h1>Twenty-eight years of games on Steam</h1>
-      <p class="byline">By Jack Welborn</p>
-      <p class="summary-paragraph">
-        This report analyzes <span class="stat" id="p-total-games">—</span> games published on Steam between
-        <span class="stat" id="p-year-range">—</span>, drawn from the Steam store's own catalog data. It looks at
-        how fast the catalog has grown, which genres and publishers dominate it, how players rate and play what
-        they buy, and how ownership of the platform's audience is distributed. The short version: growth has been
-        explosive, a small number of genres and blockbuster titles account for a disproportionate share of
-        everything measurable, and cross-platform support has quietly declined even as the catalog exploded.
-      </p>
+      <div class="page-header-inner">
+        <p class="kicker">Data Report</p>
+        <h1>Twenty-eight years of games on Steam</h1>
+        <p class="byline">By Jack Welborn</p>
+        <p class="summary-paragraph">
+          This report analyzes <span class="stat" id="p-total-games">—</span> games published on Steam between
+          <span class="stat" id="p-year-range">—</span>, drawn from the Steam store's own catalog data. It looks at
+          how fast the catalog has grown, which genres and publishers dominate it, how players rate and play what
+          they buy, and how ownership of the platform's audience is distributed. The short version: growth has been
+          explosive, a small number of genres and blockbuster titles account for a disproportionate share of
+          everything measurable, and cross-platform support has quietly declined even as the catalog exploded.
+        </p>
+      </div>
     </div>
 
     <div class="stat-grid">
@@ -175,6 +181,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
+  <script src="js/motion.js"></script>
   <script src="js/report.js"></script>
 </body>
 </html>

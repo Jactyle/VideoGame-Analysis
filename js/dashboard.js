@@ -220,5 +220,6 @@
     buildChartPanelsDOM();
     wireControls();
     renderAll();
+    if (window.VGMotion) window.VGMotion.revealAll(document.getElementById("chart-grid"));
   });
 })();
