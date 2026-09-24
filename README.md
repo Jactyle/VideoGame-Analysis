@@ -2,8 +2,7 @@
 
 A two-page site analyzing 117,420 games published on Steam between 1997 and 2026: a
 static report of eight findings, and an interactive dashboard for exploring the data
-yourself. Live site: enable GitHub Pages on this repo (Settings → Pages → Deploy from
-branch `main`, folder `/`) and it serves from the repo root, `index.html` first.
+yourself. Live site: https://jactyle.github.io/VideoGame-Analysis/
 
 ## Where the data came from
 
