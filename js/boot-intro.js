@@ -148,7 +148,7 @@
     }
     resize();
 
-    const COUNT = Math.round(Math.min(420, Math.max(160, (W * H) / 5000)));
+    const COUNT = Math.round(Math.min(650, Math.max(220, (W * H) / 3800)));
     const particles = [];
     for (let i = 0; i < COUNT; i++) {
       particles.push({
@@ -379,8 +379,7 @@
     overlay.addEventListener("touchstart", onActivate, { passive: true });
 
     function frame(now) {
-      // Trailing fade (instead of a hard clear) gives particles a light-streak trail.
-      ctx.fillStyle = "rgba(6, 9, 13, 0.22)";
+      ctx.fillStyle = "#06090d";
       ctx.fillRect(0, 0, W, H);
 
       if (phase === "idle") {
