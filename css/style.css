@@ -241,12 +241,6 @@ main > .page-header:first-child {
   color: var(--accent);
 }
 
-.kicker-icon {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-}
-
 .page-header h1 {
   font-family: var(--font-display);
   font-weight: 700;

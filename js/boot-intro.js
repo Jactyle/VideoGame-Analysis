@@ -108,6 +108,7 @@
 
   function runFullIntro() {
     document.documentElement.classList.add("boot-lock");
+    const bootStart = performance.now();
     const overlay = buildOverlay();
     const canvas = overlay.querySelector("#boot-canvas");
     const ctx = canvas.getContext("2d");
@@ -353,8 +354,29 @@
     window.addEventListener("mousemove", onMove);
     window.addEventListener("touchmove", onMove, { passive: true });
     window.addEventListener("keydown", onKey);
-    overlay.addEventListener("click", beginConverge);
-    overlay.addEventListener("touchstart", beginConverge, { passive: true });
+    // pointerdown/keydown aren't reliably treated as a "real" gesture for
+    // autoplay purposes (Safari in particular only honors click/touchstart),
+    // so on a cold load tryStartIdle's early attempts above typically never
+    // actually start the idle loop. This click/touchstart is the first
+    // guaranteed-valid gesture — use it to start the loop for real, and hold
+    // off on converging for a beat so it's actually audible before the
+    // boot-intro sound cuts it off. Replaying the intro doesn't have this
+    // problem (the earlier nav-button click already unlocked audio), so this
+    // just resolves as an immediate convergence there.
+    const MIN_IDLE_AUDIBLE_MS = 700;
+    function onActivate() {
+      if (phase === "idle" && idleAudio.paused) idleAudio.play().catch(() => {});
+      const remaining = MIN_IDLE_AUDIBLE_MS - (performance.now() - bootStart);
+      if (remaining > 0) {
+        window.setTimeout(() => {
+          if (phase === "idle") beginConverge();
+        }, remaining);
+        return;
+      }
+      beginConverge();
+    }
+    overlay.addEventListener("click", onActivate);
+    overlay.addEventListener("touchstart", onActivate, { passive: true });
 
     function frame(now) {
       // Trailing fade (instead of a hard clear) gives particles a light-streak trail.
