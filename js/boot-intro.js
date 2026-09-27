@@ -127,7 +127,7 @@
 
     const styles = getComputedStyle(document.documentElement);
     const blueRgb = parseRgb(styles.getPropertyValue("--series-1-rgb") || "102, 192, 244");
-    const violetRgb = parseRgb(styles.getPropertyValue("--decor-4-rgb") || "155, 107, 255");
+    const violetRgb = parseRgb(styles.getPropertyValue("--decor-violet-rgb") || "155, 107, 255");
     const MERGE_RGB = [255, 255, 255]; // white, matching the logo's ring/arm/glyph
 
     let W = 0;

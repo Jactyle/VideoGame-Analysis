@@ -9,14 +9,22 @@
   --gridline: rgba(255, 255, 255, 0.08);
   --baseline: rgba(255, 255, 255, 0.2);
   --border: rgba(255, 255, 255, 0.1);
-  --series-1: #66c0f4; /* steam blue */
-  --series-2: #a4d007; /* steam green */
-  --series-3: #e1a942; /* amber */
-  --series-1-rgb: 102, 192, 244;
-  --series-2-rgb: 164, 208, 7;
-  --series-3-rgb: 225, 169, 66;
-  --decor-4: #9b6bff; /* violet — decorative accent only, never used to encode chart data */
-  --decor-4-rgb: 155, 107, 255;
+  /* series-1/2/3 are validated as an ordered set (dataviz skill: OKLCH
+     lightness band, adjacent-pair CVD ΔE, contrast — re-run that check on
+     any hand-tune). Valve red sits in decor-4, not series-3, specifically
+     because it's a near-miss on CVD separation from series-2's orange when
+     adjacent; violet clears that easily in both directions. */
+  --series-1: #1e7fe0; /* aperture blue */
+  --series-2: #d9600e; /* aperture orange */
+  --series-3: #9b6bff; /* violet */
+  --series-1-rgb: 30, 127, 224;
+  --series-2-rgb: 217, 96, 14;
+  --series-3-rgb: 155, 107, 255;
+  --decor-4: #f74843; /* valve red, from valvesoftware.com's own stylesheet — decorative accent only, never used to encode chart data */
+  --decor-4-rgb: 247, 72, 67;
+  /* Boot-intro particle accent — kept independent of decor-4 so reordering
+     the chart palette's rotation doesn't silently recolor the intro. */
+  --decor-violet-rgb: 155, 107, 255;
   --success-text: #a4d007;
   --accent: #66c0f4;
   --accent-strong: #1a9fff;
@@ -24,6 +32,7 @@
   --radius-sm: 6px;
   --font-sans: "Segoe UI", Arial, "Helvetica Neue", sans-serif;
   --font-display: "Oswald", var(--font-sans);
+  --font-mono: "Share Tech Mono", "SFMono-Regular", Consolas, monospace;
 }
 
 * {
@@ -378,19 +387,27 @@ main > .page-header:first-child {
   border-top: 1px solid var(--gridline);
 }
 
-.finding:nth-of-type(3n+1) {
+/* 4-color rotation (was 3) so all four palette colors — including decor-4 —
+   show up across the report's 8 findings, two apiece, instead of cycling
+   through just series-1/2/3 and leaving decor-4 unused here. */
+.finding:nth-of-type(4n+1) {
   --finding-accent: var(--series-1);
   --finding-accent-rgb: var(--series-1-rgb);
 }
 
-.finding:nth-of-type(3n+2) {
+.finding:nth-of-type(4n+2) {
   --finding-accent: var(--series-2);
   --finding-accent-rgb: var(--series-2-rgb);
 }
 
-.finding:nth-of-type(3n) {
+.finding:nth-of-type(4n+3) {
   --finding-accent: var(--series-3);
   --finding-accent-rgb: var(--series-3-rgb);
+}
+
+.finding:nth-of-type(4n) {
+  --finding-accent: var(--decor-4);
+  --finding-accent-rgb: var(--decor-4-rgb);
 }
 
 .finding:not(.closing) {
@@ -438,7 +455,15 @@ main > .page-header:first-child {
 .chart-card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  --bracket-color: var(--tile-accent, var(--finding-accent, var(--accent)));
+  /* Faint graph-paper grid, laid over the card's existing diagonal fill —
+     read as a schematic/readout backdrop, not a real measurement grid (the
+     charts' own axis gridlines are the real ones). */
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
+  background-size: 22px 22px, 22px 22px, 100% 100%;
+  background-repeat: repeat, repeat, no-repeat;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
@@ -454,14 +479,71 @@ main > .page-header:first-child {
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--tile-accent, var(--finding-accent, var(--accent)));
+  background: var(--bracket-color);
   opacity: 0.9;
+}
+
+/* Four corner brackets, like a targeting reticle — eight thin solid-fill
+   background layers (an H bar + V bar per corner), positioned with the
+   `right/bottom <offset>` background-position syntax so each pair shares
+   one anchor point instead of needing four separate calc()s. */
+.chart-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color)),
+    linear-gradient(var(--bracket-color), var(--bracket-color));
+  background-repeat: no-repeat;
+  background-size: 14px 2px, 2px 14px, 14px 2px, 2px 14px, 14px 2px, 2px 14px, 14px 2px, 2px 14px;
+  background-position: left 8px top 8px, left 8px top 8px, right 8px top 8px, right 8px top 8px,
+    right 8px bottom 8px, right 8px bottom 8px, left 8px bottom 8px, left 8px bottom 8px;
+  opacity: 0.5;
+  transition: opacity 0.18s ease;
 }
 
 .finding .chart-card:hover {
   transform: translateY(-2px);
   border-color: rgba(var(--finding-accent-rgb), 0.45);
   box-shadow: 0 18px 40px -16px rgba(var(--finding-accent-rgb), 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.chart-card:hover::after {
+  opacity: 1;
+}
+
+/* p.chart-fig (not just .chart-fig): needs to match .finding p's own
+   specificity so max-width/color here win over that rule's 70ch clamp and
+   secondary-text color — otherwise, inside a .finding, the flex row is
+   squeezed to 70ch and "Fig." lands well short of the card's right edge. */
+p.chart-fig {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+  max-width: none;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Aperture Science's own logo (img/aperture-logo.png, recolored/cropped
+   from the source file), stamped in front of the figure number like a
+   lab-equipment badge. */
+.chart-fig-logo {
+  height: 14px;
+  width: auto;
+  flex: 0 0 auto;
+  opacity: 0.85;
 }
 
 .chart-card canvas {
@@ -551,7 +633,9 @@ main > .page-header:first-child {
   background: linear-gradient(to right, #6ba829 0%, #a0dc4c 100%);
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px -8px rgba(var(--series-2-rgb), 0.55);
+  /* Own green glow, not --series-2-rgb — that token now means chart-series
+     orange, which would clash with this button's green fill. */
+  box-shadow: 0 10px 22px -8px rgba(139, 197, 63, 0.55);
 }
 
 .chart-grid {

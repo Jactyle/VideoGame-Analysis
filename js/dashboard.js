@@ -4,6 +4,9 @@
 
   const TOP_N = 12;
 
+  // Aperture Science's own logo, stamped in front of each figure number.
+  const CHART_FIG_ICON = `<img src="img/aperture-logo.png" class="chart-fig-logo" alt="" />`;
+
   const CHART_PANELS = [
     { id: "chart-1", title: "Count by category", defaultMeasure: "count", defaultBreakdown: "genre" },
     { id: "chart-2", title: "Trend over time", defaultMeasure: "totalOwners", defaultBreakdown: "releaseYear" },
@@ -160,10 +163,12 @@
 
   function buildChartPanelsDOM() {
     const grid = document.getElementById("chart-grid");
-    for (const panel of CHART_PANELS) {
+    CHART_PANELS.forEach((panel, i) => {
       const card = document.createElement("div");
       card.className = "chart-card";
+      const fig = String(i + 1).padStart(2, "0");
       card.innerHTML = `
+        <p class="chart-fig">${CHART_FIG_ICON}<span>Fig. ${fig}</span></p>
         <h3 id="${panel.id}-heading">${panel.title}</h3>
         <div class="chart-controls">
           <select id="${panel.id}-measure"></select>
@@ -183,7 +188,7 @@
 
       measureSelect.addEventListener("change", () => renderChartPanel(panel));
       breakdownSelect.addEventListener("change", () => renderChartPanel(panel));
-    }
+    });
   }
 
   function wireControls() {
