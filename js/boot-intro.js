@@ -128,6 +128,8 @@
     const styles = getComputedStyle(document.documentElement);
     const blueRgb = parseRgb(styles.getPropertyValue("--series-1-rgb") || "102, 192, 244");
     const violetRgb = parseRgb(styles.getPropertyValue("--decor-violet-rgb") || "155, 107, 255");
+    const redRgb = parseRgb(styles.getPropertyValue("--decor-4-rgb") || "247, 72, 67");
+    const orangeRgb = parseRgb(styles.getPropertyValue("--series-2-rgb") || "217, 96, 14");
     const MERGE_RGB = [255, 255, 255]; // white, matching the logo's ring/arm/glyph
 
     let W = 0;
@@ -148,16 +150,22 @@
     }
     resize();
 
-    const COUNT = Math.round(Math.min(650, Math.max(220, (W * H) / 3800)));
+    const COUNT = Math.round(Math.min(950, Math.max(320, (W * H) / 2600)));
     const particles = [];
     for (let i = 0; i < COUNT; i++) {
+      // Radius ranges 0.6-1.9; the larger ~70% keeps the original blue/violet
+      // treatment, the smaller ~30% picks up the site's red/orange accents
+      // instead — reads as two size-coded "layers" of particles, weighted
+      // toward blue/violet.
+      const r = Math.random() * 1.3 + 0.6;
+      const isBig = r >= 1.0;
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
         vx: (Math.random() - 0.5) * 0.25,
         vy: (Math.random() - 0.5) * 0.25,
-        r: Math.random() * 1.3 + 0.6,
-        base: Math.random() < 0.82 ? blueRgb : violetRgb,
+        r,
+        base: isBig ? (Math.random() < 0.82 ? blueRgb : violetRgb) : (Math.random() < 0.5 ? redRgb : orangeRgb),
         convergeT: 0,
         fade: 1,
         sx: 0,
@@ -194,6 +202,10 @@
     const EXPLODE_MS = 900; // particles drift apart and dissolve, fading out as they go
     const BLACK_HOLD_MS = 150; // brief black beat before the logo starts building
     const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+    // How far particles curl around as they blow outward. In canvas space
+    // (y grows downward) an increasing angle turns clockwise, so a positive
+    // value here reads as a clockwise spiral.
+    const EXPLODE_SPIRAL_TURNS = 0.6;
 
     function beginConverge() {
       if (phase !== "idle") return;
@@ -285,14 +297,19 @@
       // full-diagonal-plus rocket distance.
       const blastDist = Math.hypot(W, H) * 0.62;
       particles.forEach((p, i) => {
-        // Same angle each particle arrived at, for a clean radial burst
-        // instead of a random-looking scatter.
+        // Same angle each particle arrived at, for a clean burst instead of
+        // a random-looking scatter; a clockwise spiral is layered on top of
+        // this angle as it travels outward (see the "exploding" phase below).
         const angle = i * GOLDEN_ANGLE;
-        const dist = blastDist * (1 + Math.random() * 0.35);
+        // Tight, symmetric jitter — every particle lands close to the same
+        // radius so the burst reads as one clean expanding circle instead of
+        // a ragged starburst with some particles falling short of the edge.
+        const dist = blastDist * (1 + (Math.random() - 0.5) * 0.08);
         p.sx = p.x;
         p.sy = p.y;
-        p.tx = convergeTargetX + Math.cos(angle) * dist;
-        p.ty = convergeTargetY + Math.sin(angle) * dist;
+        p.startAngle = angle;
+        p.startR = Math.hypot(p.x - convergeTargetX, p.y - convergeTargetY);
+        p.endR = dist;
         p.delay = Math.random() * 150;
       });
       // The rAF loop stopped during the "solid" hold — restart it.
@@ -432,8 +449,10 @@
           const t = Math.min(1, elapsed / EXPLODE_MS);
           if (t < 1) allDone = false;
           const e = easeInOutCubic(t);
-          p.x = p.sx + (p.tx - p.sx) * e;
-          p.y = p.sy + (p.ty - p.sy) * e;
+          const r = p.startR + (p.endR - p.startR) * e;
+          const spiralAngle = p.startAngle + EXPLODE_SPIRAL_TURNS * Math.PI * 2 * e;
+          p.x = convergeTargetX + Math.cos(spiralAngle) * r;
+          p.y = convergeTargetY + Math.sin(spiralAngle) * r;
           // Fade out gently over the whole drift so it dissolves into
           // black rather than popping off abruptly.
           p.fade = Math.max(0, 1 - t);
