@@ -147,6 +147,27 @@
     setText("f8-top1", pct(bucketShares[0]));
     setText("f8-top10", pct(bucketShares[2]));
 
+    // Finding 9: platform-combination composition of the whole catalog — a
+    // present-day, part-to-whole complement to Finding 6's over-time line.
+    // Capped at the palette's 3 validated categorical hues; the (rare)
+    // Mac-only, Linux-only, and Mac+Linux-without-Windows listings fold into
+    // "Other" rather than seating a 4th/5th data hue.
+    const platformGroups = { winOnly: 0, winMacLinux: 0, winMacOnly: 0, other: 0 };
+    for (const r of games) {
+      if (r.platforms === "Windows") platformGroups.winOnly += 1;
+      else if (r.platforms === "Windows, Mac, Linux") platformGroups.winMacLinux += 1;
+      else if (r.platforms === "Windows, Mac") platformGroups.winMacOnly += 1;
+      else platformGroups.other += 1;
+    }
+    VGCharts.doughnutChart(
+      document.getElementById("chart-9"),
+      ["Windows only", "Windows + Mac + Linux", "Windows + Mac", "Other combinations"],
+      [platformGroups.winOnly, platformGroups.winMacLinux, platformGroups.winMacOnly, platformGroups.other]
+    );
+    setText("f9-win-only", pct((100 * platformGroups.winOnly) / s.count));
+    setText("f9-all-three", pct((100 * platformGroups.winMacLinux) / s.count));
+    setText("f9-win-mac", pct((100 * platformGroups.winMacOnly) / s.count));
+
     // Closing: data-cleaning summary
     if (cleanSummary) {
       const raw = cleanSummary.rows_kept + cleanSummary.total_rows_dropped;

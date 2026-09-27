@@ -98,5 +98,61 @@
     });
   }
 
-  window.VGCharts = { barChart, lineChart };
+  // Part-to-whole, at a glance only — capped at the palette's validated
+  // 3-hue categorical set plus a neutral "Other" bucket for the remainder,
+  // never a generated 4th/5th data hue (dataviz skill: series-count ladder).
+  function doughnutChart(canvas, labels, values, { label } = {}) {
+    destroyExisting(canvas);
+    const total = values.reduce((sum, v) => sum + v, 0) || 1;
+    const colors = [cssVar("--series-1"), cssVar("--series-2"), cssVar("--series-3"), cssVar("--text-muted")];
+    const sliceColors = labels.map((_, i) => colors[i % colors.length]);
+    return new Chart(canvas, {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [
+          {
+            label,
+            data: values,
+            backgroundColor: sliceColors,
+            borderColor: cssVar("--surface-1"),
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "62%",
+        plugins: {
+          // Percentages ride the legend text itself (direct-labeled) rather
+          // than relying on slice angle/color alone to carry the value.
+          legend: {
+            position: "right",
+            labels: {
+              color: cssVar("--text-secondary"),
+              usePointStyle: true,
+              boxWidth: 8,
+              font: { size: 11 },
+              generateLabels: (chart) =>
+                chart.data.labels.map((text, i) => ({
+                  text: `${text} — ${((100 * values[i]) / total).toFixed(1)}%`,
+                  fillStyle: sliceColors[i],
+                  strokeStyle: sliceColors[i],
+                  // The legend's draw loop reads `fontColor` per item (not
+                  // `color`, and not a fallback to labels.color) to paint
+                  // the text — leaving it unset fell back to the canvas's
+                  // default black instead of the intended muted gray.
+                  fontColor: cssVar("--text-secondary"),
+                  index: i,
+                })),
+            },
+          },
+          tooltip: { mode: "nearest", intersect: true },
+        },
+      },
+    });
+  }
+
+  window.VGCharts = { barChart, lineChart, doughnutChart };
 })();
