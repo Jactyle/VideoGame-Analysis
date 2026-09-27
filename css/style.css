@@ -218,19 +218,6 @@ main > .page-header:first-child {
   z-index: 0;
 }
 
-.page-header::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
-  -webkit-mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 35%, transparent 88%);
-  mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 35%, transparent 88%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 .page-header-inner {
   position: relative;
   z-index: 1;
@@ -453,18 +440,19 @@ main > .page-header:first-child {
   max-width: 70ch;
 }
 
+/* Findings with a chart below them read the text at the chart's own full
+   width instead of the 70ch reading-line cap, so the write-up doesn't leave
+   a block of empty space beside it before the chart-card starts. The
+   closing section's methodology prose (no chart) keeps the narrower cap. */
+.finding:not(.closing) p {
+  max-width: none;
+}
+
 .chart-card {
   position: relative;
   overflow: hidden;
   --bracket-color: var(--tile-accent, var(--finding-accent, var(--accent)));
-  /* Faint graph-paper grid, laid over the card's existing diagonal fill —
-     read as a schematic/readout backdrop, not a real measurement grid (the
-     charts' own axis gridlines are the real ones). */
-  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
-  background-size: 22px 22px, 22px 22px, 100% 100%;
-  background-repeat: repeat, repeat, no-repeat;
+  background-image: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px;
