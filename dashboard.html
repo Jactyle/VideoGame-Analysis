@@ -74,7 +74,7 @@
         <label for="filter-publisher">Publisher contains</label>
         <input id="filter-publisher" type="text" placeholder="e.g. Valve" />
       </div>
-      <button type="button" id="reset-filters">Reset filters</button>
+      <button type="button" id="reset-filters" class="reset-filters-btn">Reset filters</button>
     </form>
 
     <div class="stat-grid" id="summary-stats">
@@ -101,20 +101,27 @@
     <div class="chart-grid" id="chart-grid"></div>
 
     <h2 class="section-title">Numbers behind the view</h2>
+    <p class="hint">
+      Click a column to sort it. Click a row to filter everything above down to that group —
+      genre, platform, publisher, free/paid, and release year all drill down; click its row again,
+      or reset the filters, to back out.
+    </p>
     <div class="chart-controls">
       <label for="table-breakdown" style="align-self:center; color:var(--text-muted); font-size:0.85rem;">Break table down by</label>
       <select id="table-breakdown"></select>
+      <button type="button" id="reset-filters-table" class="reset-filters-btn">Reset filters</button>
     </div>
+    <p class="table-status" id="table-status" aria-live="polite"></p>
     <div class="table-wrap">
       <table id="data-table">
         <thead>
           <tr>
-            <th data-sort="key">Group</th>
-            <th data-sort="count">Count</th>
-            <th data-sort="totalOwners">Total owners</th>
-            <th data-sort="avgPrice">Avg price</th>
-            <th data-sort="medianPlaytime">Median playtime (min)</th>
-            <th data-sort="reviewRate">Review rate</th>
+            <th data-sort="key" tabindex="0">Group</th>
+            <th data-sort="count" tabindex="0">Count</th>
+            <th data-sort="totalOwners" tabindex="0">Total owners</th>
+            <th data-sort="avgPrice" tabindex="0">Avg price</th>
+            <th data-sort="medianPlaytime" tabindex="0">Median playtime (min)</th>
+            <th data-sort="reviewRate" tabindex="0">Review rate</th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>

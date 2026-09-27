@@ -18,6 +18,85 @@
   let filtered = [];
   let tableSort = { field: "count", dir: "desc" };
 
+  // Lets a table row double as a shortcut into the filter bar: clicking a
+  // row drills the whole dashboard down to that group, clicking it again
+  // (or hitting Reset filters) backs out. Only breakdowns with a matching
+  // filter control get this — "Category" has none, so it's display-only.
+  const DRILLDOWNS = {
+    genre: {
+      canApply: (key) => [...document.getElementById("filter-genre").options].some((o) => o.value === key),
+      apply: (key) => { document.getElementById("filter-genre").value = key; },
+      clear: () => { document.getElementById("filter-genre").value = ""; },
+    },
+    platform: {
+      canApply: (key) => [...document.getElementById("filter-platform").options].some((o) => o.value === key),
+      apply: (key) => { document.getElementById("filter-platform").value = key; },
+      clear: () => { document.getElementById("filter-platform").value = ""; },
+    },
+    publisher: {
+      canApply: () => true,
+      apply: (key) => { document.getElementById("filter-publisher").value = key; },
+      clear: () => { document.getElementById("filter-publisher").value = ""; },
+    },
+    free: {
+      canApply: (key) => key === "Free" || key === "Paid",
+      apply: (key) => { document.getElementById("filter-free").value = key === "Free" ? "free" : "paid"; },
+      clear: () => { document.getElementById("filter-free").value = ""; },
+    },
+    releaseYear: {
+      canApply: (key) => [...document.getElementById("filter-year-from").options].some((o) => o.value === key),
+      apply: (key) => {
+        document.getElementById("filter-year-from").value = key;
+        document.getElementById("filter-year-to").value = key;
+      },
+      clear: () => {
+        const yearFrom = document.getElementById("filter-year-from");
+        const yearTo = document.getElementById("filter-year-to");
+        yearFrom.selectedIndex = 0;
+        yearTo.selectedIndex = yearTo.options.length - 1;
+      },
+    },
+  };
+
+  function isDrillable(breakdownKey, key) {
+    if (key === "Other") return false;
+    const d = DRILLDOWNS[breakdownKey];
+    return d ? d.canApply(key) : false;
+  }
+
+  function isRowActive(breakdownKey, key) {
+    switch (breakdownKey) {
+      case "genre":
+        return document.getElementById("filter-genre").value === key;
+      case "platform":
+        return document.getElementById("filter-platform").value === key;
+      case "publisher": {
+        const v = document.getElementById("filter-publisher").value.trim().toLowerCase();
+        return v !== "" && v === key.toLowerCase();
+      }
+      case "free":
+        return document.getElementById("filter-free").value === (key === "Free" ? "free" : "paid");
+      case "releaseYear": {
+        const yearFrom = document.getElementById("filter-year-from").value;
+        const yearTo = document.getElementById("filter-year-to").value;
+        return yearFrom === key && yearTo === key;
+      }
+      default:
+        return false;
+    }
+  }
+
+  function handleRowDrill(breakdownKey, key) {
+    const d = DRILLDOWNS[breakdownKey];
+    if (!d || !d.canApply(key)) return;
+    if (isRowActive(breakdownKey, key)) {
+      d.clear();
+    } else {
+      d.apply(key);
+    }
+    renderAll();
+  }
+
   function populateSelect(select, values, { withAllLabel } = {}) {
     for (const v of values) {
       const opt = document.createElement("option");
@@ -142,16 +221,65 @@
     tbody.innerHTML = "";
     for (const row of aggregated) {
       const tr = document.createElement("tr");
+      if (isDrillable(breakdownKey, row.key)) {
+        tr.className = "row-drillable";
+        tr.tabIndex = 0;
+        tr.setAttribute("role", "button");
+        tr.setAttribute("aria-label", `Filter the dashboard to ${row.key}`);
+        tr.dataset.breakdown = breakdownKey;
+        tr.dataset.key = row.key;
+        if (isRowActive(breakdownKey, row.key)) {
+          tr.classList.add("row-active");
+          tr.setAttribute("aria-pressed", "true");
+        }
+      }
       tr.innerHTML = `
         <td>${row.key}</td>
-        <td>${formatNumber(row.count)}</td>
-        <td>${formatCompact(row.totalOwners)}</td>
-        <td>$${row.avgPrice.toFixed(2)}</td>
-        <td>${formatNumber(row.medianPlaytime)}</td>
-        <td>${row.reviewRate.toFixed(1)}%</td>
+        <td class="num-cell">${formatNumber(row.count)}</td>
+        <td class="num-cell">${formatCompact(row.totalOwners)}</td>
+        <td class="num-cell">$${row.avgPrice.toFixed(2)}</td>
+        <td class="num-cell">${formatNumber(row.medianPlaytime)}</td>
+        <td class="num-cell">${row.reviewRate.toFixed(1)}%</td>
       `;
       tbody.appendChild(tr);
     }
+
+    updateSortIndicators();
+    updateTableStatus(breakdownKey, aggregated);
+  }
+
+  const SORT_FIELD_LABELS = {
+    key: "Group name",
+    count: "Count",
+    totalOwners: "Total owners",
+    avgPrice: "Avg price",
+    medianPlaytime: "Median playtime",
+    reviewRate: "Review rate",
+  };
+
+  function updateTableStatus(breakdownKey, aggregated) {
+    const status = document.getElementById("table-status");
+    if (!status) return;
+    const breakdownLabel = BREAKDOWNS[breakdownKey].label;
+    const fieldLabel = SORT_FIELD_LABELS[tableSort.field];
+    const dirWord = tableSort.dir === "asc" ? "lowest first" : "highest first";
+
+    const activeRow = aggregated.find((r) => isDrillable(breakdownKey, r.key) && isRowActive(breakdownKey, r.key));
+
+    let html = `Showing <strong>${aggregated.length}</strong> ${breakdownLabel.toLowerCase()} groups, sorted by <strong>${fieldLabel}</strong> (${dirWord}).`;
+    if (activeRow) {
+      html += ` Dashboard is filtered to <strong>${activeRow.key}</strong> — click that row again, or Reset filters, to clear it.`;
+    }
+    status.innerHTML = html;
+  }
+
+  function updateSortIndicators() {
+    document.querySelectorAll("#data-table th[data-sort]").forEach((th) => {
+      const active = th.dataset.sort === tableSort.field;
+      th.classList.toggle("sort-asc", active && tableSort.dir === "asc");
+      th.classList.toggle("sort-desc", active && tableSort.dir === "desc");
+      th.setAttribute("aria-sort", active ? (tableSort.dir === "asc" ? "ascending" : "descending") : "none");
+    });
   }
 
   function renderAll() {
@@ -198,16 +326,18 @@
     document.getElementById("filter-publisher").addEventListener("input", renderAll);
     document.getElementById("table-breakdown").addEventListener("change", renderTable);
 
-    document.getElementById("reset-filters").addEventListener("click", () => {
+    const resetFilters = () => {
       document.getElementById("filters").reset();
       document.getElementById("filter-year-from").selectedIndex = 0;
       const yearTo = document.getElementById("filter-year-to");
       yearTo.selectedIndex = yearTo.options.length - 1;
       renderAll();
-    });
+    };
+    document.getElementById("reset-filters").addEventListener("click", resetFilters);
+    document.getElementById("reset-filters-table").addEventListener("click", resetFilters);
 
     document.querySelectorAll("#data-table th[data-sort]").forEach((th) => {
-      th.addEventListener("click", () => {
+      const sortHere = () => {
         const field = th.dataset.sort;
         if (tableSort.field === field) {
           tableSort.dir = tableSort.dir === "asc" ? "desc" : "asc";
@@ -215,7 +345,27 @@
           tableSort = { field, dir: "desc" };
         }
         renderTable();
+      };
+      th.addEventListener("click", sortHere);
+      th.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        sortHere();
       });
+    });
+
+    const tableBody = document.getElementById("table-body");
+    const rowDrillFromEvent = (e) => {
+      const tr = e.target.closest("tr[data-key]");
+      if (!tr) return;
+      handleRowDrill(tr.dataset.breakdown, tr.dataset.key);
+    };
+    tableBody.addEventListener("click", rowDrillFromEvent);
+    tableBody.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      if (!e.target.closest("tr[data-key]")) return;
+      e.preventDefault();
+      rowDrillFromEvent(e);
     });
   }
 

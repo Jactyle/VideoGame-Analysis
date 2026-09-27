@@ -27,6 +27,7 @@
   --decor-violet-rgb: 155, 107, 255;
   --success-text: #a4d007;
   --accent: #66c0f4;
+  --accent-rgb: 102, 192, 244;
   --accent-strong: #1a9fff;
   --radius: 10px;
   --radius-sm: 6px;
@@ -612,7 +613,7 @@ p.chart-fig {
   box-shadow: 0 0 0 1px var(--accent);
 }
 
-#reset-filters {
+.reset-filters-btn {
   font-family: var(--font-sans);
   font-weight: 700;
   font-size: 0.85rem;
@@ -629,13 +630,21 @@ p.chart-fig {
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-#reset-filters:hover {
+.reset-filters-btn:hover {
   background: linear-gradient(to right, #6ba829 0%, #a0dc4c 100%);
   color: #ffffff;
   transform: translateY(-1px);
   /* Own green glow, not --series-2-rgb — that token now means chart-series
      orange, which would clash with this button's green fill. */
   box-shadow: 0 10px 22px -8px rgba(139, 197, 63, 0.55);
+}
+
+/* Smaller twin of the filter-bar's reset button, sized to sit inline with
+   the compact selects in .chart-controls rather than the filter bar's own
+   larger fields. */
+.chart-controls .reset-filters-btn {
+  font-size: 0.78rem;
+  padding: 6px 14px;
 }
 
 .chart-grid {
@@ -745,9 +754,62 @@ th:hover {
   color: var(--accent);
 }
 
+th[data-sort]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+th[data-sort].sort-asc,
+th[data-sort].sort-desc {
+  color: var(--accent);
+}
+
+th[data-sort].sort-asc::after,
+th[data-sort].sort-desc::after {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.7em;
+}
+
+th[data-sort].sort-asc::after {
+  content: "▲";
+}
+
+th[data-sort].sort-desc::after {
+  content: "▼";
+}
+
 td:first-child,
 th:first-child {
   font-variant-numeric: normal;
+}
+
+/* Numeric columns read as numbers, not text — right-aligned so digits stack
+   for comparison, matching the header they sit under. */
+th[data-sort]:not(:first-child) {
+  text-align: right;
+}
+
+td.num-cell {
+  text-align: right;
+}
+
+tr.row-drillable {
+  cursor: pointer;
+}
+
+tr.row-drillable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+tr.row-active {
+  box-shadow: inset 3px 0 0 0 var(--accent);
+}
+
+tr.row-active,
+tr.row-active:hover {
+  background: rgba(var(--accent-rgb), 0.16);
 }
 
 .section-title {
@@ -764,6 +826,21 @@ th:first-child {
   color: var(--text-muted);
   font-size: 0.85rem;
   margin: 0 0 12px;
+}
+
+/* A live readout of what the table is currently showing — breakdown, sort,
+   and any row-drilldown filter — so that state is always spelled out
+   in words instead of left for hover/click states alone to imply. */
+.table-status {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+}
+
+.table-status strong {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 footer.site-footer {
