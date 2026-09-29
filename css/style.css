@@ -1177,7 +1177,8 @@ html.boot-lock body {
 .scroll-progress-bar {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, var(--series-1), var(--series-2));
+  /* Same 4-color sweep as the footer's own top line (footer.site-footer::before). */
+  background: linear-gradient(90deg, var(--series-1), var(--series-2), var(--series-3), var(--decor-4));
   transform: scaleX(0);
   transform-origin: left;
 }
