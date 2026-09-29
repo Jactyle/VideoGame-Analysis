@@ -43,10 +43,15 @@
 
   function loadGames() {
     return new Promise((resolve, reject) => {
-      Papa.parse(CSV_URL, {
+      // worker:true runs the parse of ~117k rows off the main thread, so
+      // scroll/animation stay smooth while it loads — but the worker can't
+      // resolve a relative URL against the page, so it's resolved to
+      // absolute here first (a bare relative string throws inside the worker).
+      Papa.parse(new URL(CSV_URL, document.baseURI).href, {
         download: true,
         header: true,
         skipEmptyLines: true,
+        worker: true,
         complete: (results) => resolve(results.data.map(parseRow)),
         error: reject,
       });
@@ -163,8 +168,13 @@
     };
   }
 
+  // Plain .sort() with no comparator sorts by converting to strings, so a
+  // numeric field (release years) would sort lexicographically — it happens
+  // to land in the right order for 4-digit years with no leading zeros, but
+  // only by luck; this comparator makes it correct for any numeric field.
   function distinctValues(rows, fieldFn) {
-    return Array.from(new Set(rows.map(fieldFn))).sort();
+    const vals = Array.from(new Set(rows.map(fieldFn)));
+    return vals.sort((a, b) => (typeof a === "number" && typeof b === "number" ? a - b : String(a).localeCompare(String(b))));
   }
 
   function formatCompact(n) {

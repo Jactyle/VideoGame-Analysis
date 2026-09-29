@@ -1,11 +1,12 @@
 (function () {
   const { loadGames, aggregateBy, topNWithOther, summarize, distinctValues, measureValue, BREAKDOWNS, MEASURES, formatCompact, formatNumber } =
     window.VGData;
+  const VGMotion = window.VGMotion;
 
   const TOP_N = 12;
 
   // Aperture Science's own logo, stamped in front of each figure number.
-  const CHART_FIG_ICON = `<img src="img/aperture-logo.png" class="chart-fig-logo" alt="" />`;
+  const CHART_FIG_ICON = `<img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" />`;
 
   const CHART_PANELS = [
     { id: "chart-1", title: "Count by category", defaultMeasure: "count", defaultBreakdown: "genre" },
@@ -91,8 +92,10 @@
     if (!d || !d.canApply(key)) return;
     if (isRowActive(breakdownKey, key)) {
       d.clear();
+      VGSound.play("reset");
     } else {
       d.apply(key);
+      VGSound.play("apply");
     }
     renderAll();
   }
@@ -118,14 +121,16 @@
     return select;
   }
 
+  let allYears = [];
+
   function setupFilterOptions() {
-    const years = distinctValues(allGames, (r) => r.releaseYear).filter((y) => y !== null);
+    allYears = distinctValues(allGames, (r) => r.releaseYear).filter((y) => y !== null);
     const yearFrom = document.getElementById("filter-year-from");
     const yearTo = document.getElementById("filter-year-to");
-    populateSelect(yearFrom, years);
-    populateSelect(yearTo, years);
-    yearFrom.value = years[0];
-    yearTo.value = years[years.length - 1];
+    populateSelect(yearFrom, allYears);
+    populateSelect(yearTo, allYears);
+    yearFrom.value = allYears[0];
+    yearTo.value = allYears[allYears.length - 1];
 
     const genres = distinctValues(allGames, (r) => r.genre).filter(Boolean);
     populateSelect(document.getElementById("filter-genre"), genres);
@@ -141,6 +146,53 @@
       if (key === "genre") opt.selected = true;
       tableBreakdown.appendChild(opt);
     }
+  }
+
+  // Reads filters out of the URL (e.g. a link from a report chart, or a
+  // bookmarked/shared view) and applies them to the controls before the
+  // first render. Only ever sets a control to a value that's actually a
+  // valid option, so a stale or hand-edited URL can't leave a filter
+  // pointing at something that doesn't exist.
+  function applyURLParams() {
+    const params = new URLSearchParams(window.location.search);
+
+    const yearFrom = params.get("yearFrom");
+    if (yearFrom && allYears.includes(Number(yearFrom))) document.getElementById("filter-year-from").value = yearFrom;
+    const yearTo = params.get("yearTo");
+    if (yearTo && allYears.includes(Number(yearTo))) document.getElementById("filter-year-to").value = yearTo;
+
+    const genre = params.get("genre");
+    if (genre) {
+      const sel = document.getElementById("filter-genre");
+      if ([...sel.options].some((o) => o.value === genre)) sel.value = genre;
+    }
+    const platform = params.get("platform");
+    if (platform) {
+      const sel = document.getElementById("filter-platform");
+      if ([...sel.options].some((o) => o.value === platform)) sel.value = platform;
+    }
+    const free = params.get("free");
+    if (free === "free" || free === "paid") document.getElementById("filter-free").value = free;
+
+    const publisher = params.get("publisher");
+    if (publisher) document.getElementById("filter-publisher").value = publisher;
+  }
+
+  // Mirrors the active filters into the URL (replacing history, not
+  // pushing, so filter changes don't spam the back button) so the current
+  // view is a shareable/bookmarkable link. Only non-default values are
+  // included, so the default view keeps a clean URL.
+  function syncURL() {
+    const f = currentFilters();
+    const params = new URLSearchParams();
+    if (f.yearFrom !== allYears[0]) params.set("yearFrom", f.yearFrom);
+    if (f.yearTo !== allYears[allYears.length - 1]) params.set("yearTo", f.yearTo);
+    if (f.genre) params.set("genre", f.genre);
+    if (f.platform) params.set("platform", f.platform);
+    if (f.free) params.set("free", f.free);
+    if (f.publisher) params.set("publisher", f.publisher);
+    const qs = params.toString();
+    window.history.replaceState(null, "", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
   }
 
   function currentFilters() {
@@ -165,16 +217,32 @@
       if (f.publisher && !r.publisher.toLowerCase().includes(f.publisher)) return false;
       return true;
     });
+    aggregateCache = new Map();
+  }
+
+  // The 4 chart panels and the table breakdown often land on the same key
+  // (both default to "genre"), and each aggregateBy pass is a full scan over
+  // up to ~117k rows — memoize per render pass instead of repeating it.
+  let aggregateCache = new Map();
+  function getAggregated(breakdownKey) {
+    if (!aggregateCache.has(breakdownKey)) {
+      aggregateCache.set(breakdownKey, aggregateBy(filtered, breakdownKey));
+    }
+    return aggregateCache.get(breakdownKey);
   }
 
   function renderSummary() {
     const s = summarize(filtered);
-    document.getElementById("stat-count").textContent = formatCompact(s.count);
-    document.getElementById("stat-owners").textContent = formatCompact(s.totalOwners);
-    document.getElementById("stat-price").textContent = `$${s.avgPrice.toFixed(2)}`;
-    document.getElementById("stat-rate").textContent = `${s.reviewRate.toFixed(1)}%`;
+    VGMotion.animateNumber(document.getElementById("stat-count"), s.count, { formatter: formatCompact });
+    VGMotion.animateNumber(document.getElementById("stat-owners"), s.totalOwners, { formatter: formatCompact });
+    VGMotion.animateNumber(document.getElementById("stat-price"), s.avgPrice, { formatter: (n) => `$${n.toFixed(2)}` });
+    VGMotion.animateNumber(document.getElementById("stat-rate"), s.reviewRate, { formatter: (n) => `${n.toFixed(1)}%` });
   }
 
+  // A panel's first paint is deferred until its card scrolls into view, so
+  // Chart.js's grow-in animation plays on scroll instead of firing off-screen
+  // at load; every later call (a filter or switch change) draws immediately,
+  // since the panel is already visible and the reader expects instant feedback.
   function renderChartPanel(panel) {
     const measureKey = document.getElementById(`${panel.id}-measure`).value;
     const breakdownKey = document.getElementById(`${panel.id}-breakdown`).value;
@@ -184,30 +252,45 @@
 
     document.getElementById(`${panel.id}-heading`).textContent = `${measureLabel} by ${breakdownLabel.toLowerCase()}`;
 
-    const aggregated = aggregateBy(filtered, breakdownKey);
+    const aggregated = getAggregated(breakdownKey);
 
-    if (breakdownKey === "releaseYear") {
-      const sorted = [...aggregated].sort((a, b) => Number(a.key) - Number(b.key));
-      VGCharts.lineChart(
-        canvas,
-        sorted.map((r) => r.key),
-        [{ label: measureLabel, data: sorted.map((r) => measureValue(r, measureKey)) }]
-      );
+    const draw = () => {
+      if (breakdownKey === "releaseYear") {
+        const sorted = [...aggregated].sort((a, b) => Number(a.key) - Number(b.key));
+        VGCharts.lineChart(
+          canvas,
+          sorted.map((r) => r.key),
+          [{ label: measureLabel, data: sorted.map((r) => measureValue(r, measureKey)) }]
+        );
+      } else {
+        const top = topNWithOther(aggregated, measureKey, TOP_N);
+        VGCharts.barChart(
+          canvas,
+          top.map((r) => r.key),
+          top.map((r) => measureValue(r, measureKey)),
+          { label: measureLabel, horizontal: breakdownKey === "publisher" }
+        );
+      }
+    };
+
+    if (!panel._initialized) {
+      panel._initialized = true;
+      panel._cancelOnVisible = VGMotion.onVisible(canvas, draw);
     } else {
-      const top = topNWithOther(aggregated, measureKey, TOP_N);
-      VGCharts.barChart(
-        canvas,
-        top.map((r) => r.key),
-        top.map((r) => measureValue(r, measureKey)),
-        { label: measureLabel, horizontal: breakdownKey === "publisher" }
-      );
+      // A later render (e.g. a filter change) always draws immediately —
+      // cancel any still-pending "first scroll into view" draw so it can't
+      // fire afterward with the stale data it closed over and clobber this.
+      if (panel._cancelOnVisible) {
+        panel._cancelOnVisible();
+        panel._cancelOnVisible = null;
+      }
+      draw();
     }
   }
 
   function renderTable() {
     const breakdownKey = document.getElementById("table-breakdown").value;
-    let aggregated = aggregateBy(filtered, breakdownKey);
-    aggregated = topNWithOther(aggregated, "count", 30);
+    let aggregated = topNWithOther(getAggregated(breakdownKey), "count", 30);
 
     aggregated.sort((a, b) => {
       const dir = tableSort.dir === "asc" ? 1 : -1;
@@ -219,10 +302,14 @@
 
     const tbody = document.getElementById("table-body");
     tbody.innerHTML = "";
-    for (const row of aggregated) {
+    // Rows fade/rise in on a stagger, capped so a large table doesn't take
+    // forever to finish settling; skipped under reduced motion.
+    const animate = !VGMotion.prefersReducedMotion;
+    const enteringRows = [];
+    aggregated.forEach((row, i) => {
       const tr = document.createElement("tr");
       if (isDrillable(breakdownKey, row.key)) {
-        tr.className = "row-drillable";
+        tr.classList.add("row-drillable");
         tr.tabIndex = 0;
         tr.setAttribute("role", "button");
         tr.setAttribute("aria-label", `Filter the dashboard to ${row.key}`);
@@ -241,7 +328,15 @@
         <td class="num-cell">${formatNumber(row.medianPlaytime)}</td>
         <td class="num-cell">${row.reviewRate.toFixed(1)}%</td>
       `;
+      if (animate) {
+        tr.classList.add("row-enter");
+        tr.style.transitionDelay = `${Math.min(i * 12, 200)}ms`;
+        enteringRows.push(tr);
+      }
       tbody.appendChild(tr);
+    });
+    if (enteringRows.length) {
+      requestAnimationFrame(() => requestAnimationFrame(() => enteringRows.forEach((tr) => tr.classList.remove("row-enter"))));
     }
 
     updateSortIndicators();
@@ -284,6 +379,7 @@
 
   function renderAll() {
     applyFilters();
+    syncURL();
     renderSummary();
     for (const panel of CHART_PANELS) renderChartPanel(panel);
     renderTable();
@@ -314,23 +410,45 @@
       breakdownSelect.id = `${panel.id}-breakdown`;
       card.querySelector(`#${panel.id}-breakdown`).replaceWith(breakdownSelect);
 
-      measureSelect.addEventListener("change", () => renderChartPanel(panel));
-      breakdownSelect.addEventListener("change", () => renderChartPanel(panel));
+      measureSelect.addEventListener("change", () => {
+        VGSound.play("apply");
+        renderChartPanel(panel);
+      });
+      breakdownSelect.addEventListener("change", () => {
+        VGSound.play("apply");
+        renderChartPanel(panel);
+      });
     });
   }
 
   function wireControls() {
     for (const id of ["filter-year-from", "filter-year-to", "filter-genre", "filter-platform", "filter-free"]) {
-      document.getElementById(id).addEventListener("change", renderAll);
+      document.getElementById(id).addEventListener("change", () => {
+        VGSound.play("apply");
+        renderAll();
+      });
     }
-    document.getElementById("filter-publisher").addEventListener("input", renderAll);
-    document.getElementById("table-breakdown").addEventListener("change", renderTable);
+    // Debounced: an animated count-up (and a blip) on every keystroke would
+    // fight itself as the reader is still typing.
+    let publisherDebounce;
+    document.getElementById("filter-publisher").addEventListener("input", () => {
+      clearTimeout(publisherDebounce);
+      publisherDebounce = setTimeout(() => {
+        VGSound.play("apply");
+        renderAll();
+      }, 200);
+    });
+    document.getElementById("table-breakdown").addEventListener("change", () => {
+      VGSound.play("apply");
+      renderTable();
+    });
 
     const resetFilters = () => {
       document.getElementById("filters").reset();
       document.getElementById("filter-year-from").selectedIndex = 0;
       const yearTo = document.getElementById("filter-year-to");
       yearTo.selectedIndex = yearTo.options.length - 1;
+      VGSound.play("reset");
       renderAll();
     };
     document.getElementById("reset-filters").addEventListener("click", resetFilters);
@@ -344,6 +462,7 @@
         } else {
           tableSort = { field, dir: "desc" };
         }
+        VGSound.play("tick");
         renderTable();
       };
       th.addEventListener("click", sortHere);
@@ -370,11 +489,19 @@
   }
 
   loadGames().then((games) => {
+    document.body.classList.remove("is-loading");
     allGames = games;
     setupFilterOptions();
+    applyURLParams();
     buildChartPanelsDOM();
     wireControls();
     renderAll();
     if (window.VGMotion) window.VGMotion.revealAll(document.getElementById("chart-grid"));
+  }).catch((err) => {
+    // Without this, a failed CSV fetch/parse leaves body.is-loading set
+    // forever — the stat tiles would shimmer indefinitely instead of
+    // settling on some visible (if unhelpful) state.
+    document.body.classList.remove("is-loading");
+    console.error("Failed to load games data", err);
   });
 })();
