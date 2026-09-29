@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="is-loading">
   <nav class="site-nav">
     <span class="brand"><img src="img/steam-icon.svg" alt="" class="brand-icon" />Steam Games Analysis</span>
     <a href="index.html">Report</a>
@@ -24,9 +24,11 @@
       </button>
       <div class="nav-popup-menu" id="nav-popup-menu">
         <button type="button" class="nav-popup-item" id="replay-intro">Replay intro</button>
+        <button type="button" class="nav-popup-item" data-sound-toggle aria-pressed="true"><span class="sound-toggle-label">Sound</span></button>
       </div>
     </div>
   </nav>
+  <div class="scroll-progress" aria-hidden="true"><div class="scroll-progress-bar" id="scroll-progress-bar"></div></div>
 
   <main>
     <div class="page-header">
@@ -138,6 +140,8 @@
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/motion.js"></script>
+  <script src="js/cursor-fx.js"></script>
+  <script src="js/sound.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/boot-intro.js"></script>
 </body>

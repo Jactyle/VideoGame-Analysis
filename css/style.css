@@ -142,6 +142,14 @@ a:hover {
   transition: color 0.15s ease, background 0.15s ease;
 }
 
+/* Pushes Report/Dashboard (and, following them, the "..." menu) to the
+   right as one group, leaving the brand alone on the left. Targets the
+   first nav link rather than .nav-popup so it works regardless of which
+   page's link is .active. */
+.site-nav a:first-of-type {
+  margin-left: auto;
+}
+
 .site-nav a::after {
   content: "";
   position: absolute;
@@ -192,13 +200,20 @@ main {
   margin-right: -50vw;
   overflow: hidden;
   padding: 64px 24px 52px;
+  --hx: 0px;
+  --hy: 0px;
+  /* js/cursor-fx.js nudges --hx/--hy from pointer position; the three
+     radial-gradient anchors drift a few px off their base position for a
+     slow parallax feel. --hx/--hy are registered as animatable <length>s
+     below so the drift eases instead of snapping to each pointer sample. */
   background:
-    radial-gradient(ellipse 900px 480px at 12% -15%, rgba(var(--series-1-rgb), 0.35), transparent 60%),
-    radial-gradient(ellipse 700px 480px at 92% 5%, rgba(var(--decor-4-rgb), 0.3), transparent 60%),
-    radial-gradient(ellipse 600px 380px at 55% 115%, rgba(var(--series-2-rgb), 0.2), transparent 60%),
+    radial-gradient(ellipse 900px 480px at calc(12% + var(--hx)) calc(-15% + var(--hy)), rgba(var(--series-1-rgb), 0.35), transparent 60%),
+    radial-gradient(ellipse 700px 480px at calc(92% + var(--hx)) calc(5% + var(--hy)), rgba(var(--decor-4-rgb), 0.3), transparent 60%),
+    radial-gradient(ellipse 600px 380px at calc(55% + var(--hx)) calc(115% + var(--hy)), rgba(var(--series-2-rgb), 0.2), transparent 60%),
     linear-gradient(160deg, #1e3450 0%, #101823 72%);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.6);
+  transition: --hx 0.5s ease, --hy 0.5s ease;
 }
 
 main > .page-header:first-child {
@@ -367,6 +382,24 @@ main > .page-header:first-child {
   letter-spacing: 0.04em;
 }
 
+/* A short ring-pulse on the tile whenever its number actually changes value
+   (js/motion.js's animateNumber triggers it) — a beat of feedback for
+   peripheral vision to catch on a dashboard filter change, not just the
+   digits ticking. Never triggered under reduced motion. */
+@keyframes stat-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--tile-accent-rgb), 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 16px rgba(var(--tile-accent-rgb), 0);
+  }
+}
+
+.stat-tile.pulse {
+  animation: stat-pulse 0.6s ease-out;
+}
+
 /* Sections */
 .finding {
   position: relative;
@@ -452,6 +485,9 @@ main > .page-header:first-child {
   position: relative;
   overflow: hidden;
   --bracket-color: var(--tile-accent, var(--finding-accent, var(--accent)));
+  /* Still read by js/cursor-fx.js to color the particle trail spawned while
+     hovering this card, even though nothing here draws a glow with it. */
+  --bracket-color-rgb: var(--tile-accent-rgb, var(--finding-accent-rgb, var(--accent-rgb)));
   background-image: linear-gradient(160deg, var(--surface-2) 0%, var(--surface-1) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -727,6 +763,18 @@ tbody tr:hover {
   background: rgba(102, 192, 244, 0.08);
 }
 
+/* Rows fade/rise in on a fresh render (js/dashboard.js adds "row-enter" on
+   insert, then removes it a frame later — never added at all under reduced
+   motion, so the rule below is simply inert there). */
+tbody tr {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+tbody tr.row-enter {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
 th {
   color: var(--text-muted);
   font-weight: 700;
@@ -855,7 +903,6 @@ footer.site-footer::before {
    of risking overflow past the viewport's right edge. */
 .nav-popup {
   position: relative;
-  margin-left: auto;
 }
 
 .nav-popup-trigger {
@@ -926,6 +973,29 @@ footer.site-footer::before {
 .nav-popup-item:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.06);
+}
+
+/* Muted state: the label reads "Sound" either way — a diagonal strike
+   across just the word (sized to its own text width, not the row) signals
+   "off" instead of swapping in an "on"/"off" suffix. */
+.sound-toggle-label {
+  position: relative;
+  display: inline-block;
+}
+
+[data-sound-toggle][aria-pressed="false"] {
+  color: var(--text-muted);
+}
+
+[data-sound-toggle][aria-pressed="false"] .sound-toggle-label::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: 50%;
+  height: 1.5px;
+  background: currentColor;
+  transform: translateY(-50%) rotate(-12deg);
 }
 
 /* Boot intro — mimics the Steam Deck startup animation: particles converge
@@ -1072,5 +1142,71 @@ html.boot-lock body {
 #boot-intro.boot-reduced .boot-wordmark {
   top: 50%;
   transform: translateY(-50%);
+}
+
+/* Registering these as typed custom properties is what makes them
+   transition smoothly through the var()/calc() expressions that consume
+   them above (.page-header's parallax) — an unregistered custom property
+   change never animates, it just snaps. */
+@property --hx {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --hy {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* Reading-progress bar (report page only; js/motion.js no-ops if the
+   element isn't present). Fixed just under the sticky nav so it's visible
+   at any scroll position. Reflects scroll position directly — not gated by
+   prefers-reduced-motion, same as a native scrollbar. */
+.scroll-progress {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  z-index: 9;
+}
+
+.scroll-progress-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--series-1), var(--series-2));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* Skeleton shimmer on the headline stat tiles while the CSV is still
+   loading (report.js/dashboard.js remove body.is-loading once data lands).
+   The shimmer keyframe itself is reduced-motion-gated; the transparent
+   placeholder box still shows either way. */
+body.is-loading .stat-tile .value {
+  color: transparent;
+  display: inline-block;
+  min-width: 3.5em;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-1) 37%, var(--surface-2) 63%);
+  background-size: 400% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.is-loading .stat-tile .value {
+    animation: skeleton-shimmer 1.4s ease infinite;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 

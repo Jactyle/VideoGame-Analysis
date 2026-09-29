@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="is-loading">
   <nav class="site-nav">
     <span class="brand"><img src="img/steam-icon.svg" alt="" class="brand-icon" />Steam Games Analysis</span>
     <a href="index.html" class="active">Report</a>
@@ -24,9 +24,11 @@
       </button>
       <div class="nav-popup-menu" id="nav-popup-menu">
         <button type="button" class="nav-popup-item" id="replay-intro">Replay intro</button>
+        <button type="button" class="nav-popup-item" data-sound-toggle aria-pressed="true"><span class="sound-toggle-label">Sound</span></button>
       </div>
     </div>
   </nav>
+  <div class="scroll-progress" aria-hidden="true"><div class="scroll-progress-bar" id="scroll-progress-bar"></div></div>
 
   <main>
     <div class="page-header">
@@ -51,7 +53,7 @@
         <span class="label">Games analyzed</span>
       </div>
       <div class="stat-tile">
-        <span class="value" id="stat-year-span">—</span>
+        <span class="value"><span id="stat-year-from">—</span>–<span id="stat-year-to">—</span></span>
         <span class="label">Years covered</span>
       </div>
       <div class="stat-tile">
@@ -73,7 +75,7 @@
         2025 combined than in the platform's first fifteen years put together.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 01</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 01</span></p>
         <canvas id="chart-1" height="260"></canvas>
       </div>
     </section>
@@ -86,7 +88,7 @@
         <span class="stat" id="f2-action">—</span> games, roughly double the next largest.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 02</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 02</span></p>
         <canvas id="chart-2" height="260"></canvas>
       </div>
     </section>
@@ -100,7 +102,7 @@
         <span class="stat" id="f3-overall">—</span> of games are free.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 03</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 03</span></p>
         <canvas id="chart-3" height="260"></canvas>
       </div>
     </section>
@@ -113,7 +115,7 @@
         at roughly ten points below the Indie/Casual rate.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 04</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 04</span></p>
         <canvas id="chart-4" height="260"></canvas>
       </div>
     </section>
@@ -126,7 +128,7 @@
         and nearly five times the median for Free To Play titles.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 05</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 05</span></p>
         <canvas id="chart-5" height="260"></canvas>
       </div>
     </section>
@@ -140,7 +142,7 @@
         in 2025 — even as the total number of games shipped each year kept climbing.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 06</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 06</span></p>
         <canvas id="chart-6" height="260"></canvas>
       </div>
     </section>
@@ -156,8 +158,8 @@
         most titles are small studios pushing out large volumes of budget games.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 07</span></p>
-        <canvas id="chart-7" height="260"></canvas>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 07</span></p>
+        <canvas id="chart-7" height="300"></canvas>
       </div>
     </section>
 
@@ -170,7 +172,7 @@
         titles, split the last eighth of the audience between them.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 08</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 08</span></p>
         <canvas id="chart-8" height="260"></canvas>
       </div>
     </section>
@@ -185,7 +187,7 @@
         mostly commit to the full spread rather than picking just one extra platform.
       </p>
       <div class="chart-card">
-        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" /><span>Fig. 09</span></p>
+        <p class="chart-fig"><img src="img/aperture-logo.png" class="chart-fig-logo" alt="" width="160" height="41" /><span>Fig. 09</span></p>
         <canvas id="chart-9" height="260"></canvas>
       </div>
     </section>
@@ -233,6 +235,8 @@
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/motion.js"></script>
+  <script src="js/cursor-fx.js"></script>
+  <script src="js/sound.js"></script>
   <script src="js/report.js"></script>
   <script src="js/boot-intro.js"></script>
 </body>
