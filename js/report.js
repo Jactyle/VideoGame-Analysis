@@ -145,8 +145,8 @@
         { onClick: goToYear }
       )
     );
-    const y2014 = yearly.find((y) => y.year === 2014);
-    setText("f6-mac-peak", pct(y2014 ? (100 * y2014.mac) / y2014.total : 0));
+    const y2013 = yearly.find((y) => y.year === 2013);
+    setText("f6-mac-peak", pct(y2013 ? (100 * y2013.mac) / y2013.total : 0));
     setText("f6-mac-2025", pct(y2025 ? (100 * y2025.mac) / y2025.total : 0));
     setText("f6-linux-2025", pct(y2025 ? (100 * y2025.linux) / y2025.total : 0));
 
