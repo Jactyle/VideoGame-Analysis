@@ -244,7 +244,7 @@
   // at load; every later call (a filter or switch change) draws immediately,
   // since the panel is already visible and the reader expects instant feedback.
   function renderChartPanel(panel) {
-    const measureKey = document.getElementById(`${panel.id}-measure`).value;
+    const measureKey = panel.defaultMeasure;
     const breakdownKey = document.getElementById(`${panel.id}-breakdown`).value;
     const canvas = document.getElementById(`${panel.id}-canvas`);
     const measureLabel = MEASURES[measureKey].label;
@@ -395,25 +395,16 @@
         <p class="chart-fig">${CHART_FIG_ICON}<span>Fig. ${fig}</span></p>
         <h3 id="${panel.id}-heading">${panel.title}</h3>
         <div class="chart-controls">
-          <select id="${panel.id}-measure"></select>
           <select id="${panel.id}-breakdown"></select>
         </div>
         <canvas id="${panel.id}-canvas" height="220"></canvas>
       `;
       grid.appendChild(card);
 
-      const measureSelect = buildOptionSelect(MEASURES, panel.defaultMeasure);
-      measureSelect.id = `${panel.id}-measure`;
-      card.querySelector(`#${panel.id}-measure`).replaceWith(measureSelect);
-
       const breakdownSelect = buildOptionSelect(BREAKDOWNS, panel.defaultBreakdown);
       breakdownSelect.id = `${panel.id}-breakdown`;
       card.querySelector(`#${panel.id}-breakdown`).replaceWith(breakdownSelect);
 
-      measureSelect.addEventListener("change", () => {
-        VGSound.play("apply");
-        renderChartPanel(panel);
-      });
       breakdownSelect.addEventListener("change", () => {
         VGSound.play("apply");
         renderChartPanel(panel);
