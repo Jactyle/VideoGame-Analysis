@@ -251,6 +251,13 @@
       setText("closing-dropped-genre", formatNumber(cleanSummary.rows_dropped.no_genre));
       setText("closing-kept", formatNumber(cleanSummary.rows_kept));
     }
+
+    // Timeline last, so any problem in it can't leave the rest of the report unrendered.
+    window.VGTimeline.init(games, {
+      formatNumber,
+      formatCompact,
+      onExplore: (year) => goToDashboard({ yearFrom: year, yearTo: year }),
+    });
   }
 
   Promise.all([loadGames(), fetch("data/clean_summary.json").then((r) => r.json())])

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steam Games Analysis — Report</title>
+  <link rel="preconnect" href="https://cdn.akamai.steamstatic.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
@@ -64,6 +65,17 @@
         <span class="value" id="stat-review-rate">—</span>
         <span class="label">Catalog-wide review-positive rate</span>
       </div>
+    </div>
+
+    <div class="finding" id="finding-10">
+      <h2>Every year's biggest releases</h2>
+      <p>
+        Pick a year to see the five most-owned games that debuted on Steam that year. Each node's size shows how many
+        games shipped in total. Dates are Steam listing dates, so older titles appear in the year they reached Steam,
+        which can be later than their original launch. The most recent year is still in progress, and its owner
+        estimates haven't settled yet.
+      </p>
+      <div id="timeline-root" class="timeline"></div>
     </div>
 
     <section class="finding" id="finding-1">
@@ -237,6 +249,7 @@
   <script src="js/motion.js"></script>
   <script src="js/cursor-fx.js"></script>
   <script src="js/sound.js"></script>
+  <script src="js/timeline.js"></script>
   <script src="js/report.js"></script>
   <script src="js/boot-intro.js"></script>
 </body>

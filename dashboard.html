@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — Steam Games Analysis</title>
+  <link rel="preconnect" href="https://cdn.akamai.steamstatic.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
@@ -76,6 +77,14 @@
         <label for="filter-publisher">Publisher contains</label>
         <input id="filter-publisher" type="text" placeholder="e.g. Valve" />
       </div>
+      <div class="filter-field">
+        <label for="featured-rank">Rank top games by</label>
+        <select id="featured-rank">
+          <option value="ownersMid">Estimated owners</option>
+          <option value="reviewCount">Review count</option>
+          <option value="avgPlaytime">Average playtime</option>
+        </select>
+      </div>
       <button type="button" id="reset-filters" class="reset-filters-btn">Reset filters</button>
     </form>
 
@@ -97,6 +106,18 @@
         <span class="label">Review-positive rate</span>
       </div>
     </div>
+
+    <h2 class="section-title">Milestones by year</h2>
+    <p class="hint">
+      The top game of each year in your range, ranked by the "Rank top games by" setting in the filter bar. Hover a tile for
+      details, click one to filter the dashboard to that year.
+    </p>
+    <div id="milestones-root"></div>
+
+    <h2 class="section-title">Top releases</h2>
+    <p class="hint">The five biggest games matching your filters. Hover a game on the right to feature it.</p>
+    <div id="featured-root"></div>
+    <p class="table-status" id="featured-status" aria-live="polite"></p>
 
     <h2 class="section-title">Charts</h2>
     <p class="hint">Each chart has its own breakdown switch — change it to regroup the chart.</p>
@@ -142,6 +163,7 @@
   <script src="js/motion.js"></script>
   <script src="js/cursor-fx.js"></script>
   <script src="js/sound.js"></script>
+  <script src="js/timeline.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/boot-intro.js"></script>
 </body>

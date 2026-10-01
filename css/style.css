@@ -431,7 +431,7 @@ main > .page-header:first-child {
   --finding-accent-rgb: var(--decor-4-rgb);
 }
 
-.finding:not(.closing) {
+.finding:not(.closing):not(#finding-10) {
   counter-increment: finding;
 }
 
@@ -1211,3 +1211,483 @@ body.is-loading .stat-tile .value {
   }
 }
 
+
+/* Release timeline (finding 10) */
+/* The year strip is a store-style bar (same dark-blue gradient and shadow as
+   the featured panel below it) instead of a chart-card, so the whole timeline
+   reads as one piece of the store page. */
+.timeline {
+  margin-top: 14px;
+}
+
+.timeline-track {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  overflow-x: auto;
+  padding: 10px 8px 10px;
+  scrollbar-width: thin;
+  background: linear-gradient(135deg, #1b2b3c 0%, #16202d 60%, #121a24 100%);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.55);
+  border-radius: 3px;
+}
+
+.timeline-node {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 52px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Fixed-height slot centers every dot on one shared line, drawn per slot so
+   it spans the whole track without depending on the dots' varying sizes. */
+.timeline-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+}
+
+.timeline-slot::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(103, 193, 245, 0.18);
+}
+
+.timeline-dot {
+  position: relative;
+  display: block;
+  border-radius: 50%;
+  background: rgba(103, 193, 245, 0.25);
+  border: 2px solid rgba(103, 193, 245, 0.7);
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.timeline-year {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.timeline-node:hover .timeline-dot {
+  transform: scale(1.15);
+}
+
+.timeline-node:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.timeline-node.is-active {
+  color: #ffffff;
+}
+
+.timeline-node.is-active .timeline-dot {
+  background: #67c1f5;
+  border-color: #c6d4df;
+  box-shadow: 0 0 0 5px rgba(103, 193, 245, 0.28);
+}
+
+.timeline-panel {
+  margin-top: 14px;
+}
+
+/* The picks panel is styled after Steam's store "Featured & Recommended"
+   carousel: wide capsule art on the left with a dark info column, a rail of
+   small portrait thumbnails on the right, store-blue tag pills, a green/red
+   review line, and a dark price box. Colors are the store's own palette,
+   kept local to this block rather than added to the site's tokens. */
+.timeline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+
+.timeline-title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.timeline-sub {
+  font-size: 0.8rem;
+  color: #8f98a0;
+}
+
+.store-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 232px;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 4px;
+  background: linear-gradient(135deg, #1b2b3c 0%, #16202d 60%, #121a24 100%);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.55);
+  border-radius: 3px;
+}
+
+.store-feature[hidden] {
+  display: none;
+}
+
+.store-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  background: rgba(0, 0, 0, 0.25);
+  min-height: 300px;
+}
+
+.store-stage {
+  background: #0b1118;
+  display: flex;
+  align-items: center;
+}
+
+/* Natural aspect ratio, never cropped: the stage's dark background fills any
+   leftover height. contain also keeps the portrait fallback intact. */
+.store-capsule {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.store-capsule.is-missing,
+.timeline-art.is-missing {
+  visibility: hidden;
+}
+
+.store-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 16px 14px;
+  background: linear-gradient(180deg, rgba(42, 71, 94, 0.55) 0%, rgba(22, 32, 45, 0.9) 100%);
+}
+
+.store-name {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.store-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.store-tag {
+  padding: 2px 7px;
+  font-size: 0.74rem;
+  border-radius: 2px;
+  color: #67c1f5;
+  background: rgba(103, 193, 245, 0.2);
+}
+
+.store-review,
+.store-owners {
+  font-size: 0.82rem;
+  color: #8f98a0;
+}
+
+.store-review-label.is-pos {
+  color: #66c0f4;
+}
+
+.store-review-label.is-mixed {
+  color: #b9a074;
+}
+
+.store-review-label.is-neg {
+  color: #a8926a;
+}
+
+.store-price {
+  margin-top: auto;
+  align-self: flex-start;
+  padding: 6px 12px;
+  font-size: 0.95rem;
+  color: #c6d4df;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
+}
+
+.store-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.store-rail-item {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 4px 4px;
+  text-align: left;
+  font: inherit;
+  color: #c6d4df;
+  background: rgba(103, 193, 245, 0.1);
+  border: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.store-rail-item:hover,
+.store-rail-item:focus-visible {
+  background: rgba(103, 193, 245, 0.22);
+  outline: none;
+}
+
+.store-rail-item.is-active {
+  background: rgba(103, 193, 245, 0.35);
+  color: #ffffff;
+}
+
+.store-rail-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.store-rail-name {
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-rail-price {
+  font-size: 0.76rem;
+  color: #8f98a0;
+}
+
+.timeline-art {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 2px;
+  background: #0b1118;
+}
+
+@media (max-width: 760px) {
+  .store-feature,
+  .store-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .store-rail-item {
+    padding-block: 6px;
+  }
+}
+
+.timeline-explore {
+  margin-top: 14px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.timeline-explore:hover {
+  text-decoration: underline;
+}
+
+/* The timeline's slot in the report's 4-color rotation lands on orange;
+   it's pinned to the Steam logo's gray (#C5C3C0, from img/steam-icon.svg)
+   instead. The id selector outranks the nth-of-type rules. */
+#finding-10 {
+  --finding-accent: #c5c3c0;
+  --finding-accent-rgb: 197, 195, 192;
+}
+
+/* No "10" number badge on the timeline heading. */
+#finding-10 h2::before {
+  display: none;
+}
+
+/* Dashboard milestones strip: one box-art tile per year. */
+.milestones-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 6px 4px 10px;
+  scrollbar-width: thin;
+}
+
+.milestone {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.milestone-art {
+  width: 80px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #0b1118;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.milestone-art.is-missing {
+  visibility: hidden;
+}
+
+.milestone-year {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.milestone:hover .milestone-art,
+.milestone:focus-visible .milestone-art,
+.milestone.is-active .milestone-art {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+
+.milestone:focus-visible {
+  outline: none;
+}
+
+.milestone.is-active {
+  color: #ffffff;
+}
+
+.milestones-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.milestones-all {
+  margin-left: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.milestones-all[hidden] {
+  display: none;
+}
+
+.milestones-all:hover {
+  text-decoration: underline;
+}
+
+.milestones-caption {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+/* Table: expandable "top games" row under a group */
+.row-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 0;
+  border-radius: 3px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.row-expand:hover,
+.row-expand:focus-visible {
+  background: rgba(var(--accent-rgb), 0.28);
+  outline: none;
+}
+
+tr.detail-row > td {
+  padding: 4px 12px 14px 42px;
+  background: rgba(var(--accent-rgb), 0.05);
+}
+
+.detail-title {
+  margin: 6px 0 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.detail-table th {
+  cursor: default;
+  padding: 6px 10px;
+  font-size: 0.7rem;
+}
+
+.detail-table td {
+  padding: 6px 10px;
+}
+
+.detail-table th:hover {
+  color: var(--text-muted);
+}
+
+.detail-name {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.detail-table th.num-cell {
+  text-align: right;
+}

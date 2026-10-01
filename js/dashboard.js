@@ -302,6 +302,9 @@
 
     const tbody = document.getElementById("table-body");
     tbody.innerHTML = "";
+    tableGroupNames = new Set(aggregated.map((r) => r.key).filter((k) => k !== "Other"));
+    groupCache.clear();
+    prefetchOpenGroups(breakdownKey);
     // Rows fade/rise in on a stagger, capped so a large table doesn't take
     // forever to finish settling; skipped under reduced motion.
     const animate = !VGMotion.prefersReducedMotion;
@@ -320,20 +323,23 @@
           tr.setAttribute("aria-pressed", "true");
         }
       }
+      const isOpen = expandedGroups.has(`${breakdownKey}|${row.key}`);
       tr.innerHTML = `
-        <td>${row.key}</td>
+        <td></td>
         <td class="num-cell">${formatNumber(row.count)}</td>
         <td class="num-cell">${formatCompact(row.totalOwners)}</td>
         <td class="num-cell">$${row.avgPrice.toFixed(2)}</td>
         <td class="num-cell">${formatNumber(row.medianPlaytime)}</td>
         <td class="num-cell">${row.reviewRate.toFixed(1)}%</td>
       `;
+      tr.firstElementChild.append(buildExpandButton(breakdownKey, row.key, isOpen), document.createTextNode(row.key));
       if (animate) {
         tr.classList.add("row-enter");
         tr.style.transitionDelay = `${Math.min(i * 12, 200)}ms`;
         enteringRows.push(tr);
       }
       tbody.appendChild(tr);
+      if (isOpen) tbody.appendChild(buildDetailRow(breakdownKey, row.key));
     });
     if (enteringRows.length) {
       requestAnimationFrame(() => requestAnimationFrame(() => enteringRows.forEach((tr) => tr.classList.remove("row-enter"))));
@@ -341,6 +347,125 @@
 
     updateSortIndicators();
     updateTableStatus(breakdownKey, aggregated);
+  }
+
+  // --- Expandable "top games" row under a table group ---
+  const expandedGroups = new Set(); // "breakdown|key"
+  let tableGroupNames = new Set();
+  const groupCache = new Map(); // "breakdown|rank|key" -> top games, cleared each render
+
+  function groupMatcher(breakdownKey) {
+    const keyFn = BREAKDOWNS[breakdownKey].keyFn;
+    // Rows outside the named table groups roll up into "Other".
+    return (r) => {
+      const k = keyFn(r);
+      return tableGroupNames.has(k) ? k : "Other";
+    };
+  }
+
+  // One pass over the filtered rows fills the top 5 for every requested
+  // group at once, so having several rows open costs the same as one.
+  function computeTops(breakdownKey, rankKey, groups) {
+    const groupOf = groupMatcher(breakdownKey);
+    const collectors = new Map(
+      groups.map((g) => [g, window.VGTimeline.createTopN(5, rankKey, RANK_TIEBREAK[rankKey])])
+    );
+    for (const r of filtered) {
+      const c = collectors.get(groupOf(r));
+      if (c) c.add(r);
+    }
+    for (const [g, c] of collectors) groupCache.set(`${breakdownKey}|${rankKey}|${g}`, c.result());
+  }
+
+  function topForGroup(breakdownKey, key, rankKey) {
+    const cacheKey = `${breakdownKey}|${rankKey}|${key}`;
+    if (!groupCache.has(cacheKey)) computeTops(breakdownKey, rankKey, [key]);
+    return groupCache.get(cacheKey);
+  }
+
+  // Warm the cache for every open group of the current breakdown in one pass.
+  function prefetchOpenGroups(breakdownKey) {
+    if (!window.VGTimeline) return;
+    const rankKey = document.getElementById("featured-rank").value;
+    const open = [...expandedGroups]
+      .filter((id) => id.startsWith(`${breakdownKey}|`))
+      .map((id) => id.slice(breakdownKey.length + 1))
+      .filter((g) => g === "Other" || tableGroupNames.has(g))
+      .filter((g) => !groupCache.has(`${breakdownKey}|${rankKey}|${g}`));
+    if (open.length) computeTops(breakdownKey, rankKey, open);
+  }
+
+  function buildExpandButton(breakdownKey, key, isOpen) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "row-expand";
+    btn.dataset.breakdown = breakdownKey;
+    btn.dataset.group = key;
+    btn.setAttribute("aria-expanded", String(isOpen));
+    btn.setAttribute("aria-label", `Top games in ${key}`);
+    const arrow = document.createElement("span");
+    arrow.setAttribute("aria-hidden", "true");
+    arrow.textContent = isOpen ? "▾" : "▸";
+    btn.appendChild(arrow);
+    return btn;
+  }
+
+  // Rebuilds open detail rows in place (e.g. after the ranking changes).
+  function refreshDetailRows() {
+    document.querySelectorAll("#table-body tr.detail-row").forEach((tr) => {
+      tr.replaceWith(buildDetailRow(tr.dataset.breakdown, tr.dataset.group));
+    });
+  }
+
+  function cell(tag, text, className) {
+    const c = document.createElement(tag);
+    c.textContent = text;
+    if (className) c.className = className;
+    return c;
+  }
+
+  function buildDetailRow(breakdownKey, key) {
+    const rankKey = document.getElementById("featured-rank").value;
+    const games = window.VGTimeline ? topForGroup(breakdownKey, key, rankKey) : [];
+    const tr = document.createElement("tr");
+    tr.className = "detail-row";
+    tr.dataset.breakdown = breakdownKey;
+    tr.dataset.group = key;
+    const td = document.createElement("td");
+    td.colSpan = 6;
+
+    const table = document.createElement("table");
+    table.className = "detail-table";
+    const head = document.createElement("tr");
+    ["Game", "Developer", "Genre", "Released", "Price", "Owners", "Reviews"].forEach((h, i) =>
+      head.appendChild(cell("th", h, i >= 4 ? "num-cell" : ""))
+    );
+    const thead = document.createElement("thead");
+    thead.appendChild(head);
+    const body = document.createElement("tbody");
+    for (const r of games) {
+      const row = document.createElement("tr");
+      const reviews = r.reviewCount > 0
+        ? `${formatCompact(r.reviewCount)}${r.reviewRate !== null ? ` (${Math.round(r.reviewRate * 100)}%)` : ""}`
+        : "—";
+      row.append(
+        cell("td", r.name, "detail-name"),
+        cell("td", r.developer || "—"),
+        cell("td", r.genre || "—"),
+        cell("td", r.releaseDate || "—"),
+        cell("td", r.isFree ? "Free" : `$${r.price.toFixed(2)}`, "num-cell"),
+        cell("td", `~${formatCompact(r.ownersMid)}`, "num-cell"),
+        cell("td", reviews, "num-cell")
+      );
+      body.appendChild(row);
+    }
+    table.append(thead, body);
+    const title = document.createElement("p");
+    title.className = "detail-title";
+    title.textContent = `Top ${games.length} in ${key}, ranked by ${document.getElementById("featured-rank").selectedOptions[0].textContent.toLowerCase()}`;
+    td.append(title, table);
+    tr.appendChild(td);
+    return tr;
   }
 
   const SORT_FIELD_LABELS = {
@@ -377,10 +502,57 @@
     });
   }
 
+  // Tiebreak keeps the ranking sensible when the primary measure is a coarse
+  // bucket (owners) or zero for most rows (playtime).
+  const RANK_TIEBREAK = { ownersMid: "reviewCount", reviewCount: "ownersMid", avgPlaytime: "ownersMid" };
+  let featured = null;
+  function renderFeatured() {
+    const root = document.getElementById("featured-root");
+    if (!window.VGTimeline) return;
+    if (!featured) {
+      featured = window.VGTimeline.createFeatured({ formatCompact, formatNumber });
+      root.appendChild(featured.root);
+    }
+    const key = document.getElementById("featured-rank").value;
+    const picks = window.VGTimeline.topGames(filtered, 5, key, RANK_TIEBREAK[key]);
+    featured.root.hidden = picks.length === 0;
+    featured.render(picks);
+    document.getElementById("featured-status").textContent = picks.length ? "" : "No games match the current filters.";
+  }
+
+  let milestones = null;
+  function renderMilestones() {
+    if (!window.VGTimeline) return;
+    if (!milestones) {
+      milestones = window.VGTimeline.createMilestones({
+        formatCompact,
+        onPick: (year) => {
+          document.getElementById("filter-year-from").value = String(year);
+          document.getElementById("filter-year-to").value = String(year);
+          VGSound.play("apply");
+          renderAll();
+        },
+        onShowAll: () => {
+          DRILLDOWNS.releaseYear.clear();
+          VGSound.play("reset");
+          renderAll();
+        },
+      });
+      document.getElementById("milestones-root").appendChild(milestones.root);
+    }
+    const key = document.getElementById("featured-rank").value;
+    const from = document.getElementById("filter-year-from");
+    const to = document.getElementById("filter-year-to");
+    const narrowed = from.selectedIndex > 0 || to.selectedIndex < to.options.length - 1;
+    milestones.render(filtered, key, RANK_TIEBREAK[key], narrowed);
+  }
+
   function renderAll() {
     applyFilters();
     syncURL();
     renderSummary();
+    renderFeatured();
+    renderMilestones();
     for (const panel of CHART_PANELS) renderChartPanel(panel);
     renderTable();
   }
@@ -413,6 +585,12 @@
   }
 
   function wireControls() {
+    document.getElementById("featured-rank").addEventListener("change", () => {
+      VGSound.play("apply");
+      renderFeatured();
+      renderMilestones();
+      refreshDetailRows();
+    });
     for (const id of ["filter-year-from", "filter-year-to", "filter-genre", "filter-platform", "filter-free"]) {
       document.getElementById(id).addEventListener("change", () => {
         VGSound.play("apply");
@@ -470,8 +648,32 @@
       if (!tr) return;
       handleRowDrill(tr.dataset.breakdown, tr.dataset.key);
     };
-    tableBody.addEventListener("click", rowDrillFromEvent);
+    tableBody.addEventListener("click", (e) => {
+      const toggle = e.target.closest(".row-expand");
+      if (toggle) {
+        // The toggle is its own control: it must not also drill the row.
+        // Flip just this row's detail in place instead of re-rendering the
+        // table (which would replay the row animations and drop scroll/focus).
+        const { breakdown, group } = toggle.dataset;
+        const id = `${breakdown}|${group}`;
+        const tr = toggle.closest("tr");
+        const open = !expandedGroups.has(id);
+        if (open) {
+          expandedGroups.add(id);
+          tr.after(buildDetailRow(breakdown, group));
+        } else {
+          expandedGroups.delete(id);
+          if (tr.nextElementSibling && tr.nextElementSibling.classList.contains("detail-row")) tr.nextElementSibling.remove();
+        }
+        toggle.setAttribute("aria-expanded", String(open));
+        toggle.firstElementChild.textContent = open ? "▾" : "▸";
+        return;
+      }
+      if (e.target.closest(".detail-row")) return;
+      rowDrillFromEvent(e);
+    });
     tableBody.addEventListener("keydown", (e) => {
+      if (e.target.closest(".row-expand") || e.target.closest(".detail-row")) return;
       if (e.key !== "Enter" && e.key !== " ") return;
       if (!e.target.closest("tr[data-key]")) return;
       e.preventDefault();
