@@ -1691,3 +1691,10 @@ tr.detail-row > td {
 .detail-table th.num-cell {
   text-align: right;
 }
+
+.charts-title .reset-filters-btn {
+  margin-left: 14px;
+  font-size: 0.78rem;
+  padding: 6px 14px;
+  vertical-align: middle;
+}

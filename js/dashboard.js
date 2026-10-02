@@ -569,7 +569,6 @@
         <div class="chart-controls">
           <select id="${panel.id}-measure"></select>
           <select id="${panel.id}-breakdown"></select>
-          <button type="button" class="reset-filters-btn" id="${panel.id}-reset">Reset</button>
         </div>
         <canvas id="${panel.id}-canvas" height="220"></canvas>
       `;
@@ -589,12 +588,6 @@
       });
       breakdownSelect.addEventListener("change", () => {
         VGSound.play("apply");
-        renderChartPanel(panel);
-      });
-      card.querySelector(`#${panel.id}-reset`).addEventListener("click", () => {
-        measureSelect.value = panel.defaultMeasure;
-        breakdownSelect.value = panel.defaultBreakdown;
-        VGSound.play("reset");
         renderChartPanel(panel);
       });
     });
@@ -636,6 +629,18 @@
       VGSound.play("reset");
       renderAll();
     };
+    document.getElementById("reset-charts").addEventListener("click", () => {
+      for (const panel of CHART_PANELS) {
+        const measure = document.getElementById(`${panel.id}-measure`);
+        const breakdown = document.getElementById(`${panel.id}-breakdown`);
+        // Only redraw charts the reader actually changed.
+        if (measure.value === panel.defaultMeasure && breakdown.value === panel.defaultBreakdown) continue;
+        measure.value = panel.defaultMeasure;
+        breakdown.value = panel.defaultBreakdown;
+        renderChartPanel(panel);
+      }
+      VGSound.play("reset");
+    });
     document.getElementById("reset-filters").addEventListener("click", resetFilters);
     document.getElementById("reset-filters-table").addEventListener("click", resetFilters);
 
